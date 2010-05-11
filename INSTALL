@@ -1,0 +1,55 @@
+AEOLUS 0.8.4  BUILD INSTRUCTIONS (LINUX)
+_______________________________________
+
+
+To build this version, you need to have the shared
+libraries
+
+*  libclalsadrv.so.2.0.0
+*  libclthreads.so.2.4.0
+*  libclxclient.so.3.6.0
+
+and the corresponding header files installed.
+They should be available from the same place where
+you obtained the Aeolus sources.
+
+Three binary files will be made:
+
+*  aeolus            main program, 
+*  aeolus_x11.so     GUI plugin,
+*  aeolus_txt.so     text mode user interface.
+
+In this version the latter is functional but not complete.
+
+The default Makefile will install the Aeolus binary
+in /usr/local/bin, and the user interface plugins in
+/usr/local/lib (or /usr/local/lib64 on 64-bit systems).
+
+The modify this you can edit the PREFIX definition in
+the Makefile. It is not possible to just move the plugins
+to another location without recompilation as the path
+to them will be compiled into the aeolus binary.
+
+To make:
+
+*  cd to the directory containing the source files
+*  make
+*  (as root) make install
+
+After a successful install you may do a 'make clean'.
+
+64-bit support is experimental. Please report any
+problems (and solutions) to <fons@kokkinizita.net>.
+
+See also the README file for run-time configuration.
+
+
+AEOLUS 0.8.4  BUILD INSTRUCTIONS (OSX)
+_____________________________________
+
+
+See the file BUILD-osx
+
+
+-- 
+FA
