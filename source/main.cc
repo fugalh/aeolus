@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2003-2008 Fons Adriaensen <fons@kokkinizita.net>
-    
+
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -67,13 +67,13 @@ static void help (void)
     fprintf (stderr, "  -t                 Text mode user interface\n");
     fprintf (stderr, "  -u                 Use presets file in user's home dir\n");
 #ifdef __linux__
-    fprintf (stderr, "  -N <name>          Name to use as JACK and ALSA client [aeolus]\n");   
+    fprintf (stderr, "  -N <name>          Name to use as JACK and ALSA client [aeolus]\n");
 #else
-    fprintf (stderr, "  -N <name>          Name to use as JACK and CoreMIDI client [aeolus]\n");   
+    fprintf (stderr, "  -N <name>          Name to use as JACK and CoreMIDI client [aeolus]\n");
 #endif
-    fprintf (stderr, "  -S <stops>         Name of stops directory [stops]\n");   
-    fprintf (stderr, "  -I <instr>         Name of instrument directory [Aeolus]\n");   
-    fprintf (stderr, "  -W <waves>         Name of waves directory [waves]\n");   
+    fprintf (stderr, "  -S <stops>         Name of stops directory [stops]\n");
+    fprintf (stderr, "  -I <instr>         Name of instrument directory [Aeolus]\n");
+    fprintf (stderr, "  -W <waves>         Name of waves directory [waves]\n");
     fprintf (stderr, "  -J                 Use JACK (default), with options:\n");
     fprintf (stderr, "    -s               Select JACK server\n");
     fprintf (stderr, "    -B               Ambisonics B format output\n");
@@ -91,7 +91,7 @@ static void help (void)
 static void procoptions (int ac, char *av [], const char *where)
 {
     int k;
-    
+
     optind = 1;
     opterr = 0;
     while ((k = getopt (ac, av, options)) != -1)
@@ -99,7 +99,7 @@ static void procoptions (int ac, char *av [], const char *where)
         if (optarg && (*optarg == '-'))
         {
             fprintf (stderr, "\n%s\n", where);
-	    fprintf (stderr, "  Missing argument for '-%c' option.\n", k); 
+	    fprintf (stderr, "  Missing argument for '-%c' option.\n", k);
             fprintf (stderr, "  Use '-h' to see all options.\n");
             exit (1);
         }
@@ -114,15 +114,15 @@ static void procoptions (int ac, char *av [], const char *where)
         case 'r' : r_val = atoi (optarg); break;
         case 'p' : p_val = atoi (optarg); break;
         case 'n' : n_val = atoi (optarg); break;
-        case 'N' : N_val = optarg; break; 
-        case 'S' : S_val = optarg; break; 
-        case 'I' : I_val = optarg; break; 
-        case 'W' : W_val = optarg; break; 
-        case 'd' : d_val = optarg; break; 
+        case 'N' : N_val = optarg; break;
+        case 'S' : S_val = optarg; break;
+        case 'I' : I_val = optarg; break;
+        case 'W' : W_val = optarg; break;
+        case 'd' : d_val = optarg; break;
 	case 's' : s_val = optarg; break;
         case '?':
             fprintf (stderr, "\n%s\n", where);
-            if (optopt != ':' && strchr (options, optopt)) fprintf (stderr, "  Missing argument for '-%c' option.\n", optopt); 
+            if (optopt != ':' && strchr (options, optopt)) fprintf (stderr, "  Missing argument for '-%c' option.\n", optopt);
             else if (isprint (optopt)) fprintf (stderr, "  Unknown option '-%c'.\n", optopt);
             else fprintf (stderr, "  Unknown option character '0x%02x'.\n", optopt & 255);
             fprintf (stderr, "  Use '-h' to see all options.\n");
@@ -184,11 +184,11 @@ int main (int ac, char *av [])
     char           s [1024];
     char          *p;
     int            n;
-     
+
     p = getenv ("HOME");
     if (p) sprintf (s, "%s/.aeolusrc", p);
     else strcpy (s, ".aeolusrc");
-    if (readconfig (s)) readconfig ("/etc/aeolus.conf"); 
+    if (readconfig (s)) readconfig ("/etc/aeolus.conf");
     procoptions (ac, av, "On command line:");
 
     if (mlockall (MCL_CURRENT | MCL_FUTURE)) fprintf (stderr, "Warning: memory lock failed.\n");
@@ -209,33 +209,43 @@ int main (int ac, char *av [])
         return 1;
     }
 
-    audio = new Audio (N_val, &note_queue, &comm_queue);
+    audio = NULL;
+    if (A_opt)
+    {
 #ifdef __linux__
-    if (A_opt) audio->init_alsa (d_val, r_val, p_val, n_val);
-    else       audio->init_jack (s_val, B_opt, &midi_queue);
+        AlsaAudio* aaudio = new AlsaAudio (N_val, &note_queue, &comm_queue);
+        aaudio->init_alsa (d_val, r_val, p_val, n_val);
+        audio = aaudio;
 #else
-    audio->init_jack (s_val, B_opt, &midi_queue);
+        fprintf(stderr, "Error: ALSA only available on Linux.");
+        return 1;
 #endif
+    } else {
+        JackAudio* jaudio = new JackAudio (N_val, &note_queue, &comm_queue);
+        jaudio->init_jack (s_val, B_opt, &midi_queue);
+        audio = jaudio;
+    }
+
     model = new Model (&comm_queue, &midi_queue, audio->midimap (), audio->appname (), S_val, I_val, W_val, u_opt);
     imidi = new Imidi (&note_queue, &midi_queue, audio->midimap (), audio->appname ());
     slave = new Slave ();
     iface = so_create (ac, av);
 
-    ITC_ctrl::connect (audio, EV_EXIT,  &itcc, EV_EXIT);    
-    ITC_ctrl::connect (audio, EV_QMIDI, model, EV_QMIDI);    
-    ITC_ctrl::connect (audio, TO_MODEL, model, FM_AUDIO);    
-    ITC_ctrl::connect (imidi, EV_EXIT,  &itcc, EV_EXIT);    
-    ITC_ctrl::connect (imidi, EV_QMIDI, model, EV_QMIDI);    
-    ITC_ctrl::connect (imidi, TO_MODEL, model, FM_IMIDI);    
-    ITC_ctrl::connect (model, EV_EXIT,  &itcc, EV_EXIT);    
-    ITC_ctrl::connect (model, TO_AUDIO, audio, FM_MODEL);    
-    ITC_ctrl::connect (model, TO_SLAVE, slave, FM_MODEL);    
-    ITC_ctrl::connect (model, TO_IFACE, iface, FM_MODEL);    
-    ITC_ctrl::connect (slave, EV_EXIT,  &itcc, EV_EXIT);    
-    ITC_ctrl::connect (slave, TO_AUDIO, audio, FM_SLAVE);    
-    ITC_ctrl::connect (slave, TO_MODEL, model, FM_SLAVE);    
-    ITC_ctrl::connect (iface, EV_EXIT,  &itcc, EV_EXIT);    
-    ITC_ctrl::connect (iface, TO_MODEL, model, FM_IFACE);    
+    ITC_ctrl::connect (audio, EV_EXIT,  &itcc, EV_EXIT);
+    ITC_ctrl::connect (audio, EV_QMIDI, model, EV_QMIDI);
+    ITC_ctrl::connect (audio, TO_MODEL, model, FM_AUDIO);
+    ITC_ctrl::connect (imidi, EV_EXIT,  &itcc, EV_EXIT);
+    ITC_ctrl::connect (imidi, EV_QMIDI, model, EV_QMIDI);
+    ITC_ctrl::connect (imidi, TO_MODEL, model, FM_IMIDI);
+    ITC_ctrl::connect (model, EV_EXIT,  &itcc, EV_EXIT);
+    ITC_ctrl::connect (model, TO_AUDIO, audio, FM_MODEL);
+    ITC_ctrl::connect (model, TO_SLAVE, slave, FM_MODEL);
+    ITC_ctrl::connect (model, TO_IFACE, iface, FM_MODEL);
+    ITC_ctrl::connect (slave, EV_EXIT,  &itcc, EV_EXIT);
+    ITC_ctrl::connect (slave, TO_AUDIO, audio, FM_SLAVE);
+    ITC_ctrl::connect (slave, TO_MODEL, model, FM_SLAVE);
+    ITC_ctrl::connect (iface, EV_EXIT,  &itcc, EV_EXIT);
+    ITC_ctrl::connect (iface, TO_MODEL, model, FM_IFACE);
 
     audio->start ();
     if (imidi->thr_start (SCHED_FIFO, audio->relpri () - 20, 0x00010000))
@@ -251,14 +261,14 @@ int main (int ac, char *av [])
     slave->thr_start (SCHED_OTHER, 0, 0x00010000);
     iface->thr_start (SCHED_OTHER, 0, 0x00010000);
 
-    signal (SIGINT, sigint_handler); 
+    signal (SIGINT, sigint_handler);
     n = 4;
     while (n)
-    {    
+    {
 	itcc.get_event (1 << EV_EXIT);
 	{
 	    if (n-- == 4)
-	    {   
+	    {
                 imidi->terminate ();
 		model->terminate ();
 		slave->terminate ();
@@ -273,7 +283,7 @@ int main (int ac, char *av [])
     delete slave;
     delete iface;
     dlclose (so_handle);
- 
+
     return 0;
 }
 

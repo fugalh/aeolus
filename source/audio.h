@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2003-2008 Fons Adriaensen <fons@kokkinizita.net>
-    
+
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -38,33 +38,23 @@ class Audio : public A_thread
 {
 public:
 
-    Audio (const char *jname, Lfq_u32 *qnote, Lfq_u32 *qcomm);
+    Audio (const char* appname, Lfq_u32 *qnote, Lfq_u32 *qcomm);
     virtual ~Audio (void);
-#ifdef __linux__
-    void  init_alsa (const char *device, int fsamp, int fsize, int nfrag);
-#endif
-    void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
     void  start (void);
 
-    const char  *appname (void) const { return _appname; }
     uint16_t    *midimap (void) const { return (uint16_t *) _midimap; }
+    const char  *appname (void) const { return _appname; }
+
     int  policy (void) const { return _policy; }
-    int  abspri (void) const { return _abspri; }
     int  relpri (void) const { return _relpri; }
 
-private:
-   
+protected:
+
+    virtual void proc_midi(int) = 0;
+
     enum { VOLUME, REVSIZE, REVTIME, STPOSIT };
 
     void init_audio (void);
-#ifdef __linux__
-    void close_alsa (void);
-#endif
-    void close_jack (void);
-    virtual void thr_main (void);
-    void jack_shutdown (void);
-    int  jack_callback (jack_nframes_t);
-    void proc_jmidi (int);
     void proc_queue (Lfq_u32 *);
     void proc_synth (int);
     void proc_keys1 (void);
@@ -111,28 +101,13 @@ private:
 	}
     }
 
-    static void jack_static_shutdown (void *);
-    static int  jack_static_callback (jack_nframes_t, void *);
-
     const char     *_appname;
+    Lfq_u32        *_qnote;
+    Lfq_u32        *_qcomm;
     uint16_t        _midimap [16];
-    Lfq_u32        *_qnote; 
-    Lfq_u32        *_qcomm; 
-    Lfq_u8         *_qmidi;
     volatile bool   _running;
-#ifdef __linux__
-    Alsa_driver    *_alsa_handle;
-#endif
-    jack_client_t  *_jack_handle;
-    jack_port_t    *_jack_opport [8];
-    jack_port_t    *_jack_midipt;
     int             _policy;
-    int             _abspri;
     int             _relpri;
-    int             _jmidi_count;
-    int             _jmidi_index;
-    void           *_jmidi_pdata;
-    int             _hold;
     bool            _bform;
     int             _nplay;
     unsigned int    _fsamp;
@@ -147,11 +122,65 @@ private:
     Fparm           _audiopar [4];
     float           _revsize;
     float           _revtime;
+    int             _hold;
+};
+
+
+#ifdef __linux__
+class AlsaAudio : public Audio
+{
+public:
+    AlsaAudio (Lfq_u32 *qnote, Lfq_u32 *qcomm);
+    ~AlsaAudio();
+    void  init_alsa (const char *device, int fsamp, int fsize, int nfrag);
+    virtual void thr_main (void);
+protected:
+    virtual void proc_midi(int) {}
+    void close_alsa (void);
+
+    Alsa_driver    *_alsa_handle;
+};
+#endif
+
+class JackAudio : public Audio
+{
+public:
+    JackAudio(const char *jname, Lfq_u32 *qnote, Lfq_u32 *qcomm);
+    ~JackAudio();
+    void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
+    int  abspri (void) const { return _abspri; }
+    virtual void thr_main (void) {}
+
+protected:
+
+    void close_jack (void);
+    void jack_shutdown (void);
+    int  jack_callback (jack_nframes_t);
+    void proc_jmidi (int);
+
+    virtual void proc_midi(int k)
+    {
+	if (_jmidi_pdata)
+	{
+	    proc_jmidi (k + PERIOD);
+	}
+    }
+
+    static void jack_static_shutdown (void *);
+    static int  jack_static_callback (jack_nframes_t, void *);
+
+    Lfq_u8         *_qmidi;
+    jack_client_t  *_jack_handle;
+    jack_port_t    *_jack_opport [8];
+    jack_port_t    *_jack_midipt;
+    int             _abspri;
+    int             _jmidi_count;
+    int             _jmidi_index;
+    void           *_jmidi_pdata;
 
     static const char *_ports_stereo [2];
     static const char *_ports_ambis1 [4];
 };
-
 
 #endif
 
