@@ -17,7 +17,7 @@
 
 
 PREFIX = /usr/local
-SUFFIX := $(shell uname -p | sed -e 's/^unknown/$//' -e 's/^i.86/$//' -e 's/^x86_64/$/64/')
+SUFFIX := $(shell uname -m | sed -e 's/^unknown/$//' -e 's/^i.86/$//' -e 's/^x86_64/$/64/')
 LIBDIR = lib$(SUFFIX)
 VERSION = 0.8.4
 DISTDIR = aeolus-$(VERSION)
@@ -43,7 +43,7 @@ XIFACE_O =	styles.o mainwin.o midiwin.o audiowin.o instrwin.o editwin.o midimatr
 		multislider.o functionwin.o xiface.o addsynth.o
 aeolus_x11.so:	CPPFLAGS += -dynamic -D_REENTRANT -I/usr/X11R6/include `freetype-config --cflags`
 aeolus_x11.so:	LDLIBS += -lclthreads -lclxclient -lXft -lX11
-aeolus_x11.so:	LDFLAGS += -dynamiclib -L$(PREFIX)/$(LIBDIR) -L/usr/X11R6/$(LIBDIR)
+aeolus_x11.so:	LDFLAGS += -dynamiclib -L$(PREFIX)/$(LIBDIR) -L/usr/X11R6/lib
 aeolus_x11.so: $(XIFACE_O) $(LIBCLX)
 	g++ $(LDFLAGS) -o $@ $(XIFACE_O) $(LDLIBS)
 
