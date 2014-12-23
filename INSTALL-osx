@@ -32,6 +32,15 @@ make and make install using the proper makefile.
 
 Building clthreads and clxclient works the same way. (clalsadrv is not needed for OSX)
 
+If you get dlopen errors like this:
+
+    Error: can't open user interface plugin: dlopen(/usr/local/lib64/aeolus_x11.so, 2): Library not loaded: libclxclient.3.6.1.dylib
+      Referenced from: /usr/local/lib64/aeolus_x11.so
+      Reason: image not found.
+
+Then do this:
+
+    ln -sf /usr/local/lib64/libcl* /usr/local/lib
 
 Running Aeolus
 --------------
