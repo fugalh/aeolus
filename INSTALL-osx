@@ -1,5 +1,5 @@
 AEOLUS 0.8.4  BUILD INSTRUCTIONS (OSX)
-_____________________________________
+______________________________________
 
 December 2014
 
@@ -15,7 +15,7 @@ driver will probably not automatically select Aeolus as a destination and
 provide you no means for doing so yourself. For this you need to either use
 MidiKeys with MIDI thru, or a patch bay such as MIDI Patchbay[3]. In my
 experience MidiKeys is easier and more reliable, at least in the face of my
-apparently-buggy USB MIDI driver.
+apparently-buggy USB MIDI driver (in 2008, anyway).
 
 1. http://jackaudio.org/
 2. http://www.manyetas.com/creed/midikeys.html
@@ -24,13 +24,13 @@ apparently-buggy USB MIDI driver.
 
 Building Aeolus
 ---------------
-Assuming you have all the dependencies worked out (see below), you just need to
+Assuming you have all the dependencies worked out, you just need to
 make and make install using the proper makefile.
 
     make -f Makefile-osx
     make -f Makefile-osx install
 
-Building clthreads and clxclient works the same way.
+Building clthreads and clxclient works the same way. (clalsadrv is not needed for OSX)
 
 
 Running Aeolus
