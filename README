@@ -34,25 +34,25 @@ and of an instrument. The one supplied with the current
 release has this structure:
 
 
- stops-0.3.0 
+ stops-0.3.0
      |
      |___ Aeolus
-     |        |          
+     |        |
      |        |____ definition
      |        |____ presets
      |
      |___ Aeolus1
-     |        |          
+     |        |
      |        |____ definition
      |        |____ presets
      |
      |___ Aeolus2
-     |        |          
+     |        |
      |        |____ definition
      |        |____ presets
      |
      |___ ***.ae0
-     |___ ***.ae0 
+     |___ ***.ae0
      |___ ***.ae0
      |___ ...
      |
@@ -87,8 +87,8 @@ synthesis. There is one such file for each rank of
 pipes in the organ. These are binary files and they
 should not be edited. 'Power users' can use the built-in
 synthesis editor to modify them (see section 5).
-  
-The waves directory will be empty initially. When 
+
+The waves directory will be empty initially. When
 Aeolus starts up, it will compute wavetables, one for
 each pipe. This is indicated by the flashing stop buttons.
 The same will happen whenever the tuning or temperament is
@@ -113,7 +113,7 @@ Aeolus takes run-time options from three sources:
 *  command line options
 
 Apart from empty lines and comments (lines starting with '#')
-either of the files should just contain the command line options  
+either of the files should just contain the command line options
 you want to use, on a single line (examples given below).
 
 If the file in the home directory exists (even empty) then the
@@ -124,30 +124,30 @@ Command line options are:
 
 (audio interface)
 
-  -J     Use JACK. This is also the default. The option 
+  -J     Use JACK. This is also the default. The option
          can be used to override a -A in the files.
 
   -A     Use ALSA. Aeolus should work with the "default"
          device, but in recent ALSA releases this has a
-         very large buffer size, and this may result in 
+         very large buffer size, and this may result in
          excessive latency. Use of a hardware device and
-         the options below is recommended. 
+         the options below is recommended.
 
          Sub-options for ALSA and their defaults are:
 
          -d <device>             (default)
          -r <sample rate>        (48000)
          -p <period size>        (1024)
-         -n <number of periods>  (2) 
+         -n <number of periods>  (2)
 
 (output channels)
 
-  -C  <number of channels> 
+  -C  <number of channels>
 
          The default is 2 (stereo). Other legal values
          are 4 for four speakers in a square and 8 for
-         eight speaker in cube setup. The built-in 
-         Ambisonics decoder used for the latter two 
+         eight speaker in cube setup. The built-in
+         Ambisonics decoder used for the latter two
          formats is quite primitive and will be removed
          in future versions, to be replaced with a much
          better external application.
@@ -161,7 +161,7 @@ Command line options are:
   -B     This options selects direct Ambisionics first order
          B-format output, to be used for recording or with
          an external decoder.
- 
+
 (resources)
 
   -S  <stops directory>
@@ -172,8 +172,8 @@ Command line options are:
 
          This is relative to the stops directory.
          The default is 'Aeolus'.
-            
-  -W  <waves directory> 
+
+  -W  <waves directory>
 
          This is relative to the stops directory.
          The default is 'waves'. This options mainly exists
@@ -192,7 +192,7 @@ Command line options are:
          an empty stub and should not be used.
 
   -h     Prints version information and a summary of all
-         command line options. 
+         command line options.
 
 
 For example if you always use Aeolus with ALSA device hw:0,
@@ -225,7 +225,7 @@ This will use the default instrument 'Aeolus', and save the
 presets in .aeolus-presets in the users's home directory.
 
 
-4. A quick tour of the GUI 
+4. A quick tour of the GUI
 --------------------------
 
 4.1 The main window
@@ -260,14 +260,14 @@ enabled for control in the midi matrix.
 
 The value is interpreted as follows:
 
-  v = 01mm0ggg 
+  v = 01mm0ggg
 
       This type of messages (bit 6 set) selects a group, and either
       resets all stops in that group or sets the mode for the second
       form below.
-      
+
       mm = mode. This can be:
-    
+
          00  disabled, also resets all elements in the group.
          01  set off
          10  set on
@@ -284,11 +284,24 @@ The value is interpreted as follows:
 
       According to the current state of mode, this command switches a
       stop on or off, or toggles its state, or does nothing at all.
-      
+
       bbbbb = button index within the group.
 
       Buttons are numbered left to right, top to bottom within each
       group. The first one is #0.
+
+Presets can be set and recalled with the MIDI Program Change message. The bank
+of presets can be selected with the bank select message.
+
+  1100cccc 00sppppp
+      Program change (on channel c): set or recall program (p).  If s is 0,
+      preset is recalled, if s is 1 preset is stored
+
+  1011cccc 00000000 000bbbbb
+      Bank select on channel c.
+
+As always the message is only accepted on channels enabled for control in the
+midi matrix.
 
 
 EOF
