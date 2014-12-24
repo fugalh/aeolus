@@ -31,6 +31,7 @@
 #include "model.h"
 #include "slave.h"
 #include "iface.h"
+#include "audio-portaudio.h"
 
 
 #ifdef __linux__
@@ -41,7 +42,11 @@ static const char *options = "htuJBM:N:S:I:W:s:";
 static char  optline [1024];
 static bool  t_opt = false;
 static bool  u_opt = false;
+#ifdef __linux__
 static bool  A_opt = false;
+#else
+static bool  A_opt = true;
+#endif
 static bool  B_opt = false;
 static int   r_val = 48000;
 static int   p_val = 1024;
@@ -74,7 +79,11 @@ static void help (void)
     fprintf (stderr, "  -S <stops>         Name of stops directory [stops]\n");
     fprintf (stderr, "  -I <instr>         Name of instrument directory [Aeolus]\n");
     fprintf (stderr, "  -W <waves>         Name of waves directory [waves]\n");
+#ifdef __linux__
     fprintf (stderr, "  -J                 Use JACK (default), with options:\n");
+#else
+    fprintf (stderr, "  -J                 Use JACK, with options:\n");
+#endif
     fprintf (stderr, "    -s               Select JACK server\n");
     fprintf (stderr, "    -B               Ambisonics B format output\n");
 #ifdef __linux__
@@ -83,6 +92,8 @@ static void help (void)
     fprintf (stderr, "    -r <rate>          Sample frequency [48000]\n");
     fprintf (stderr, "    -p <period>        Period size [1024]\n");
     fprintf (stderr, "    -n <nfrags>        Number of fragments [2]\n\n");
+#else
+    fprintf (stderr, "  -A                 Use PortAudio (default)\n");
 #endif
     exit (1);
 }
@@ -217,8 +228,7 @@ int main (int ac, char *av [])
         aaudio->init_alsa (d_val, r_val, p_val, n_val);
         audio = aaudio;
 #else
-        fprintf(stderr, "Error: ALSA only available on Linux.");
-        return 1;
+        audio = new PA_Audio(N_val, &note_queue, &comm_queue);
 #endif
     } else {
         JackAudio* jaudio = new JackAudio (N_val, &note_queue, &comm_queue);

@@ -411,7 +411,6 @@ void AlsaAudio::close_alsa ()
 #endif
 
 // JackAudio
-
 JackAudio::JackAudio (const char *name, Lfq_u32 *qnote, Lfq_u32 *qcomm) :
     Audio(name, qnote, qcomm),
     _qmidi (0),

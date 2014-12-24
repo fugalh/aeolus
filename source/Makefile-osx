@@ -27,9 +27,9 @@ CPPFLAGS += -march=native
 all:	aeolus aeolus_x11.so aeolus_txt.so
 
 
-AEOLUS_O =	main.o audio.o model.o slave.o imidi-osx.o addsynth.o scales.o \
+AEOLUS_O =	main.o audio.o audio-portaudio.o model.o slave.o imidi-osx.o addsynth.o scales.o \
 		reverb.o asection.o division.o rankwave.o rngen.o exp2ap.o lfqueue.o
-aeolus:	LDLIBS += -lclthreads -lpthread -ljack -lpthread -framework Cocoa -framework CoreMIDI
+aeolus:	LDLIBS += -lclthreads -lpthread -ljack -lpthread -framework Cocoa -framework CoreMIDI -lportaudio
 aeolus: LDFLAGS += -L$(PREFIX)/$(LIBDIR)
 aeolus:	$(AEOLUS_O)
 	g++ $(LDFLAGS) -o $@ $(AEOLUS_O) $(LDLIBS)
