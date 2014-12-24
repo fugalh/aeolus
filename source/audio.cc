@@ -1,20 +1,21 @@
-/*
-    Copyright (C) 2003-2008 Fons Adriaensen <fons@kokkinizita.net>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+// ----------------------------------------------------------------------------
+//
+//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ----------------------------------------------------------------------------
 
 
 #include <math.h>
@@ -348,8 +349,8 @@ Audio::~Audio (void)
 
 void AlsaAudio::init_alsa (const char *device, int fsamp, int fsize, int nfrag)
 {
-    _alsa_handle = new Alsa_driver (device, 0, 0, fsamp, fsize, nfrag);
-    if (_alsa_handle->stat () < 0)
+    _alsa_handle = new Alsa_pcmi (device, 0, 0, fsamp, fsize, nfrag);
+    if (_alsa_handle->state () < 0)
     {
         fprintf (stderr, "Error: can't connect to ALSA.\n");
         exit (1);

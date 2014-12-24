@@ -1,9 +1,11 @@
-#  Copyright (C) 2003-2010 Fons Adriaensen <fons@kokkinizita.net>
-#  Copyright (C) 2008 Hans Fugal <hans@fugal.net>
+# -------------------------------------------------------------------------
 #
+#  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+#  Copyright (C) 2008 Hans Fugal <hans@fugal.net>
+#    
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
+#  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
 #
 #  This program is distributed in the hope that it will be useful,
@@ -12,17 +14,18 @@
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# -------------------------------------------------------------------------
 
 
 PREFIX = /usr/local
 SUFFIX := $(shell uname -m | sed -e 's/^unknown/$//' -e 's/^i.86/$//' -e 's/^x86_64/$/64/')
 LIBDIR = lib$(SUFFIX)
-VERSION = 0.8.4
-DISTDIR = aeolus-$(VERSION)
-CPPFLAGS += -O3 -Wall -MMD -MP -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(PREFIX)/$(LIBDIR)\"
-CPPFLAGS += -march=native
+VERSION = 0.9.0
+CPPFLAGS += -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(PREFIX)/$(LIBDIR)\"
+CXXFLAGS += -O2 -Wall -MMD -MP
+CXXFLAGS += -march=native
 
 all:	aeolus aeolus_x11.so aeolus_txt.so
 
@@ -73,11 +76,3 @@ install:	aeolus aeolus_x11.so aeolus_txt.so
 clean:
 	/bin/rm -f *~ *.o *.d *.a *.so aeolus
 
-
-tarball:
-	cd ..; \
-	/bin/rm -f -r $(DISTDIR)*; \
-	svn export aeolus $(DISTDIR); \
-	tar cvf $(DISTDIR).tar $(DISTDIR); \
-	bzip2 $(DISTDIR).tar; \
-	/bin/rm -f -r $(DISTDIR);
