@@ -1,20 +1,21 @@
-/*
-    Copyright (C) 2003-2010 Fons Adriaensen <fons@kokkinizita.net>
-    
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+// ----------------------------------------------------------------------------
+//
+//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//    
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ----------------------------------------------------------------------------
 
 
 #include "mainwin.h"
@@ -64,7 +65,7 @@ void Splashwin::expose (XExposeEvent *E)
     D.drawstring (s, 0); 
     D.setfont (XftFonts.spla2);
     D.move (x, y);
-    D.drawstring ("(C) 2003-2010 Fons Adriaensen", 0); 
+    D.drawstring ("(C) 2003-2013 Fons Adriaensen", 0); 
     D.move (x, y + 50);
     D.drawstring ("This is free software, and you are welcome to distribute it", 0); 
     D.move (x, y + 70);

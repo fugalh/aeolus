@@ -1,20 +1,21 @@
-/*
-    Copyright (C) 2003-2008 Fons Adriaensen <fons@kokkinizita.net>
-    
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+// ----------------------------------------------------------------------------
+//
+//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//    
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ----------------------------------------------------------------------------
 
 
 #include "styles.h"
@@ -60,13 +61,13 @@ void init_styles (X_display *disp, X_resman *xrm)
     Colors.main_bg  = disp->alloc_color (xrm->get (".color.main.bg",  "gray40"),  Colors.black);
     Colors.main_ds  = disp->alloc_color (xrm->get (".color.main.ds",  "gray20"),  Colors.black);
     Colors.main_ls  = disp->alloc_color (xrm->get (".color.main.ls",  "gray60"),  Colors.white);
-    Colors.text_bg  = disp->alloc_color (xrm->get (".color.text.bg",  "gray80"),  Colors.white);
+    Colors.text_bg  = disp->alloc_color (xrm->get (".color.text.bg",  "white"),   Colors.white);
     Colors.text_hl  = disp->alloc_color (xrm->get (".color.text.hl",  "white"),   Colors.white);
     Colors.text_ca  = disp->alloc_color (xrm->get (".color.text.ca",  "red"),     Colors.black);
     Colors.slid_kn  = disp->alloc_color (xrm->get (".color.slid.kn",  "coral"),   Colors.black);
     Colors.slid_mk  = disp->alloc_color (xrm->get (".color.slid.mk",  "white"),   Colors.white);
     Colors.butt_bg0 = disp->alloc_color (xrm->get (".color.butt.bg0", "gray30"),  Colors.white);
-    Colors.butt_bg1 = disp->alloc_color (xrm->get (".color.butt.bg1", "gray90"),  Colors.white);
+    Colors.butt_bg1 = disp->alloc_color (xrm->get (".color.butt.bg1", "white"),   Colors.white);
     Colors.ife0_bg0 = disp->alloc_color (xrm->get (".color.ife0.bg0", "#202040"), Colors.white);
     Colors.ife0_bg1 = disp->alloc_color (xrm->get (".color.ife0.bg1", "#e0e0ff"), Colors.white);
     Colors.ife1_bg0 = disp->alloc_color (xrm->get (".color.ife1.bg0", "#203030"), Colors.white);

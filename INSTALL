@@ -1,13 +1,13 @@
-AEOLUS 0.8.4  BUILD INSTRUCTIONS (LINUX)
+AEOLUS 0.9.0  BUILD INSTRUCTIONS (LINUX)
 _______________________________________
 
 
 To build this version, you need to have the shared
 libraries
 
-*  libclalsadrv.so.2.0.0
+*  libzita-alsa-pcmi.so.0.2.0
 *  libclthreads.so.2.4.0
-*  libclxclient.so.3.6.0
+*  libclxclient.so.3.9.0
 
 and the corresponding header files installed.
 They should be available from the same place where
@@ -38,17 +38,16 @@ To make:
 
 After a successful install you may do a 'make clean'.
 
-64-bit support is experimental. Please report any
-problems (and solutions) to <fons@kokkinizita.net>.
+Please report any problems (and solutions) to <fons@linuxaudio.org>.
 
 See also the README file for run-time configuration.
 
 
-AEOLUS 0.8.4  BUILD INSTRUCTIONS (OSX)
+AEOLUS 0.9.0  BUILD INSTRUCTIONS (OSX)
 _____________________________________
 
 
-See the file BUILD-osx
+See the file INSTALL-osx
 
 
 -- 
