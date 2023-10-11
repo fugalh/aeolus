@@ -179,7 +179,7 @@ void Tiface::handle_ifc_ready (void)
     {
         printf ("Aeolus is ready.\n");
 	print_info ();
-        _reader.thr_start (SCHED_OTHER, 0, 0x20000);
+        _reader.thr_start (SCHED_OTHER, 0, 0);
 	_reader.read ();
     }
     _init = false;

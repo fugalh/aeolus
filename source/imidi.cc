@@ -127,8 +127,8 @@ void Imidi::proc_midi (void)
         m = _midimap [c] & 127;        // Keyboard and hold bits
 //        d = (_midimap [c] >>  8) & 7;  // Division number if (f & 2)
         f = (_midimap [c] >> 12) & 7;  // Control enabled if (f & 4)
-
         t = E->type;
+
 	switch (t)
 	{ 
 	case SND_SEQ_EVENT_NOTEON:

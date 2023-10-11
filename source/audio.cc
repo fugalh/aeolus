@@ -126,10 +126,10 @@ void Audio::init_alsa (const char *device, int fsamp, int fsize, int nfrag)
     init_audio ();
     for (int i = 0; i < _nplay; i++) _outbuf [i] = new float [fsize];
     _running = true;
-    if (thr_start (_policy = SCHED_FIFO, _relpri = -20, 0x00010000))
+    if (thr_start (_policy = SCHED_FIFO, _relpri = -20, 0))
     {
         fprintf (stderr, "Warning: can't run ALSA thread in RT mode.\n");
-        if (thr_start (_policy = SCHED_OTHER, _relpri = 0, 0x00010000))
+        if (thr_start (_policy = SCHED_OTHER, _relpri = 0, 0))
         {
             fprintf (stderr, "Error: can't create ALSA thread.\n");
             exit (1);

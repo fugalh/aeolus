@@ -23,7 +23,7 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib$(SUFFIX)
 
-VERSION = 0.9.8
+VERSION = 0.9.9
 CPPFLAGS += -MMD -MP -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(LIBDIR)\"
 CXXFLAGS += -O2 -Wall
 CXXFLAGS += -march=native

@@ -47,8 +47,8 @@ void Pipewave::initstatic (float fsamp)
 
 void Pipewave::play (void)
 {
-    int     i, d, k1, k2;
-    float   g, dg, y, dy, t;
+    int     i, k;
+    float   g, dg, y, dy;
     float   *p, *q, *r;
 
     p = _p_p;
@@ -77,7 +77,7 @@ void Pipewave::play (void)
 
     if (r)
     {
-        k1 = PERIOD;
+        k = PERIOD;
         q = _out; 
 	g = _g_r;
         i = _i_r - 1;
@@ -86,7 +86,7 @@ void Pipewave::play (void)
  
         if (r < _p1)
         {
-            while (k1--)
+            while (k--)
             {
 	        *q++ += g * *r++;
                 g -= dg;
@@ -96,31 +96,23 @@ void Pipewave::play (void)
 	{
             y = _y_r;  
             dy = _d_r;
-            while (k1)
+            while (k--)
 	    {            
-                t = y + k1 * dy;
-                d = 0;
-                k2 = k1;  
-                if (t > 1.0f)
-                {
-		    d = 1; 
-                    k2 = (int)((1.0f - y) / dy); 
-                }
-                else if (t < 0.0f) 
-	        {
-		    d = -1; 
-                    k2 = (int)(-y / dy); 
-	        }
-                k1 -= k2;
-                while (k2--)
-       	        {
-                    *q++ += g * (r [0] + y * (r [1] - r [0]));
-                    g -= dg;
-                    y += dy;
-                    r += _k_s;
-	        }
-                y -= d;
-                r += d;
+		y += dy;
+		if (y > 1.0f)
+		{
+		    y -= 1.0f;
+		    r += 1;
+		}
+		else if (y < 0.0f)
+		{
+		    y += 1.0f;
+		    r -= 1;
+		}
+                *q++ += g * (r [0] + y * (r [1] - r [0]));
+		g -= dg;
+                r += _k_s;
+                if (r >= _p2) r -= _l1;
 	    }
             _y_r = y;
 	}           
@@ -129,18 +121,17 @@ void Pipewave::play (void)
 	{
 	    _g_r = g;
             _i_r = i;
-            if (r >= _p2) r -= _l1;
 	}
         else r = 0;
     }	
 
     if (p) 
     { 
-        k1 = PERIOD;             
+        k = PERIOD;             
         q = _out;
         if (p < _p1)
         {
-            while (k1--)
+            while (k--)
             {
 		*q++ += *p++;
 	    }
@@ -150,32 +141,23 @@ void Pipewave::play (void)
             y = _y_p;  
             _z_p += _d_p * 0.0005f * (0.05f * _d_p * (_rgen.urandf () - 0.5f) - _z_p);
             dy = _z_p * _k_s;
-            while (k1)
+            while (k--)
 	    {            
-                t = y + k1 * dy;
-                d = 0;
-                k2 = k1;  
-                if (t > 1.0f)
-	        {
-		    d = 1; 
-                    k2 = (int)((1.0f - y) / dy); 
-                }
-                else if (t < 0.0f) 
-	        {
-		    d = -1; 
-                    k2 = (int)(-y / dy); 
-	        }
-                k1 -= k2;
-                while (k2--)
-       	        {
-                    *q++ += p [0] + y * (p [1] - p [0]);
-                    y += dy;
-                    p += _k_s;
-	        }
-                y -= d;
-                p += d;
+		y += dy;
+		if (y > 1.0f)
+		{
+		    y -= 1.0f;
+		    p += 1;
+		}
+		else if (y < 0.0f)
+		{
+		    y += 1.0f;
+		    p -= 1;
+		}
+                *q++ += p [0] + y * (p [1] - p [0]);
+                p += _k_s;
+                if (p >= _p2) p -= _l1;
 	    }
-            if (p >= _p2) p -= _l1;
             _y_p = y;
 	}
     }
