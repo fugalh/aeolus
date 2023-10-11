@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ public:
     void trem_off (void) { _trem = 2; }
 
     void process (void);
-    void update (int note, int mask);
-    void update (unsigned char *keys);
+    void update (int note, int16_t mask);
+    void update (uint16_t *keys);
 
 private:
    

@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -142,8 +142,8 @@ void Xiface::handle_mesg (ITC_mesg *M)
         _midiwin->setup (X);
         _audiowin->setup (X);
         _instrwin->setup (X);
-        _editwin->sdir (X->_stops);
-        _editwin->wdir (X->_waves);
+        _editwin->sdir (X->_stopsdir);
+        _editwin->wdir (X->_wavesdir);
         _ready = true;         
         break;
     }
@@ -225,7 +225,7 @@ void Xiface::handle_callb (int k, X_window *W, XEvent *E)
 	break;
 
     case CB_GLOB_MOFF:
-        send_event (TO_MODEL, new M_ifc_anoff (127));
+        send_event (TO_MODEL, new ITC_mesg (MT_IFC_ANOFF));
 	break;
 
     case CB_MAIN_MSG:

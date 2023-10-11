@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2019 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -62,29 +62,23 @@ static Iface   *iface;
 static void help (void)
 {
     fprintf (stderr, "\nAeolus %s\n\n",VERSION);
-    fprintf (stderr, "  (C) 2003-2013 Fons Adriaensen  <fons@linuxaudio.org>\n");
+    fprintf (stderr, "  (C) 2003-2022 Fons Adriaensen  <fons@linuxaudio.org>\n");
     fprintf (stderr, "Options:\n");
     fprintf (stderr, "  -h                 Display this text\n");
     fprintf (stderr, "  -t                 Text mode user interface\n");
     fprintf (stderr, "  -u                 Use presets file in user's home dir\n");
-#ifdef __linux__
     fprintf (stderr, "  -N <name>          Name to use as JACK and ALSA client [aeolus]\n");   
-#else
-    fprintf (stderr, "  -N <name>          Name to use as JACK and CoreMIDI client [aeolus]\n");   
-#endif
     fprintf (stderr, "  -S <stops>         Name of stops directory [stops]\n");   
     fprintf (stderr, "  -I <instr>         Name of instrument directory [Aeolus]\n");   
     fprintf (stderr, "  -W <waves>         Name of waves directory [waves]\n");   
     fprintf (stderr, "  -J                 Use JACK (default), with options:\n");
     fprintf (stderr, "    -s               Select JACK server\n");
     fprintf (stderr, "    -B               Ambisonics B format output\n");
-#ifdef __linux__
     fprintf (stderr, "  -A                 Use ALSA, with options:\n");
     fprintf (stderr, "    -d <device>        Alsa device [default]\n");
     fprintf (stderr, "    -r <rate>          Sample frequency [48000]\n");
     fprintf (stderr, "    -p <period>        Period size [1024]\n");
     fprintf (stderr, "    -n <nfrags>        Number of fragments [2]\n\n");
-#endif
     exit (1);
 }
 

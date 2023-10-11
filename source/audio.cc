@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ void Audio::init_audio (void)
         _asectp [i] = new Asection ((float) _fsamp);
         _asectp [i]->set_size (_revsize);
     }
-    _hold = KEYS_MASK;
+    _hold = KMAP_ALL;
 }
 
 
@@ -299,7 +299,7 @@ int Audio::jack_callback (jack_nframes_t nframes)
 
 void Audio::proc_jmidi (int tmax) 
 {
-    int                 c, f, m, n, t, v;
+    int                 c, f, k, m, n, t, v;
     jack_midi_event_t   E;
 
     // Read and process MIDI commands from the JACK port.
@@ -314,10 +314,9 @@ void Audio::proc_jmidi (int tmax)
         n = E.buffer [1];
 	v = E.buffer [2];
 	c = t & 0x0F;
-        m = _midimap [c] & 127;        // Keyboard and hold bits
-//        d = (_midimap [c] >>  8) & 7;  // Division number if (f & 2)
-        f = (_midimap [c] >> 12) & 7;  // Control enabled if (f & 4)
-
+        k = _midimap [c] & 15;
+        f = _midimap [c] >> 12;
+        
 	switch (t & 0xF0)
 	{
 	case 0x80:
@@ -343,7 +342,7 @@ void Audio::proc_jmidi (int tmax)
 		}
 		else if (n <= 96)
 		{
-		    if (m) key_on (n - 36, m & _hold);
+		    if (f & 1) key_on (n - 36, 1 << k);
 		}
 	    }
 	    else
@@ -354,7 +353,7 @@ void Audio::proc_jmidi (int tmax)
 		}
 		else if (n <= 96)
 		{
-		    if (m) key_off (n - 36, m & KEYS_MASK);
+		    if (f & 1) key_off (n - 36, 1 << k);
 		}
 	    }
 	    break;
@@ -362,33 +361,24 @@ void Audio::proc_jmidi (int tmax)
 	case 0xB0: // Controller
 	    switch (n)
 	    {
-	    case MIDICTL_HOLD:
-		// Hold pedal.
-                if (m & HOLD_MASK)
-		{
-                    if (v > 63)
-                    {
-		        _hold = KEYS_MASK | HOLD_MASK;
-			cond_key_on (m, HOLD_MASK);
-		    }
-                    else
-		    {
-		        _hold = KEYS_MASK;
-			cond_key_off (HOLD_MASK, HOLD_MASK);
-		    }                    
-		}                    
-		break;
-
 	    case MIDICTL_ASOFF:
 		// All sound off, accepted on control channels only.
-		// Clears all keyboards, including held notes.
-		if (f & 4) cond_key_off (ALL_MASK, ALL_MASK);
+		// Clears all keyboards.
+                if (f & 4)
+                {
+                    m = KMAP_ALL;
+                    cond_key_off (m, m);
+                }
 		break;
 
 	    case MIDICTL_ANOFF:
 		// All notes off, accepted on channels controlling
-		// a keyboard. Does not clear held notes. 
-		if (m) cond_key_off (m, m);
+		// a keyboard.
+                if (f & 1)
+                {
+                    m = 1 << k;
+                    cond_key_off (m, m);
+                }
 		break;
 	
 	    case MIDICTL_BANK:	
@@ -446,8 +436,9 @@ void Audio::proc_jmidi (int tmax)
 
 void Audio::proc_queue (Lfq_u32 *Q) 
 {
-    uint32_t  k;
-    int       b, c, i, j, n;
+    int       c, i, j, k, n;
+    uint32_t  q;
+    uint16_t  m;
     union     { uint32_t i; float f; } u;
 
     // Execute commands from the model thread (qcomm),
@@ -456,79 +447,80 @@ void Audio::proc_queue (Lfq_u32 *Q)
     n = Q->read_avail ();
     while (n > 0)
     {
-	k = Q->read (0);
-        c = k >> 24;      
-        j = (k >> 16) & 255;
-        i = (k >>  8) & 255; 
-        b = k & 255;
+	q = Q->read (0);
+        c = (q >> 24) & 255;  // command    
+        i = (q >> 16) & 255;  // key, rank or parameter index
+        j = (q >>  8) & 255;  // division index
+        k = q & 255;          // keyboard index
 
         switch (c)
 	{
 	case 0:
 	    // Single key off.
-            key_off (i, b);
+            key_off (i, 1 << k);
 	    Q->read_commit (1);
 	    break;
 
 	case 1:
 	    // Single key on.
-            key_on (i, b);
+            key_on (i, 1 << k);
 	    Q->read_commit (1);
 	    break;
 
 	case 2:
-	    // Conditional key off.
-	    cond_key_off (j, b);
+	    // All notes off.
+            m = (k == NKEYBD) ? KMAP_ALL : (1 << k);
+	    cond_key_off (m, m);
 	    Q->read_commit (1);
 	    break;
 
 	case 3:
-	    // Conditional key on.
-	    cond_key_on (j, b);
 	    Q->read_commit (1);
 	    break;
 
         case 4:
-	    // Clear bits in division mask.
-            _divisp [j]->clr_div_mask (b); 
+	    // Clear bit in division mask.
+            _divisp [j]->clr_div_mask (k); 
 	    Q->read_commit (1);
             break;
 
         case 5:
-	    // Set bits in division mask.
-            _divisp [j]->set_div_mask (b); 
+	    // Set bit in division mask.
+            _divisp [j]->set_div_mask (k); 
 	    Q->read_commit (1);
             break;
 
         case 6:
-	    // Clear bits in rank mask.
-            _divisp [j]->clr_rank_mask (i, b); 
+	    // Clear bit in rank mask.
+            _divisp [j]->clr_rank_mask (i, k); 
 	    Q->read_commit (1);
             break;
 
         case 7:
-	    // Set bits in rank mask.
-            _divisp [j]->set_rank_mask (i, b); 
+	    // Set bit in rank mask.
+            _divisp [j]->set_rank_mask (i, k); 
 	    Q->read_commit (1);
             break;
 
         case 8:
 	    // Hold off.
-            _hold = KEYS_MASK;
-	    cond_key_off (HOLD_MASK, HOLD_MASK);
-	    Q->read_commit (1);
+            printf ("HOLD OFF %d", k);
+//            _hold = KMAP_ALL;
+//             cond_key_off (KMAP_HLD, KMAP_HLD);
+            Q->read_commit (1);
 	    break;
 
         case 9:
 	    // Hold on.
-            _hold = KEYS_MASK | HOLD_MASK;
-	    cond_key_on (j, HOLD_MASK);
-	    Q->read_commit (1);
+            printf ("HOLD ON  %d", k);
+//            _hold = KMAP_ALL | KMAP_HLD;
+//            cond_key_on (, KMAP_HLD);
+            Q->read_commit (1);
 	    break;
 
         case 16:
 	    // Tremulant on/off.
-            if (b) _divisp [j]->trem_on (); 
+            if (k) _divisp [j]->trem_on (); 
             else   _divisp [j]->trem_off ();
 	    Q->read_commit (1);
             break;
@@ -538,13 +530,16 @@ void Audio::proc_queue (Lfq_u32 *Q)
 	    if (n < 2) return;
             u.i = Q->read (1);
             Q->read_commit (2);        
-            switch (i)
+            switch (j)
  	    {
-            case 0: _divisp [j]->set_swell (u.f); break;
-            case 1: _divisp [j]->set_tfreq (u.f); break;
-            case 2: _divisp [j]->set_tmodd (u.f); break;
-            break;
+            case 0: _divisp [i]->set_swell (u.f); break;
+            case 1: _divisp [i]->set_tfreq (u.f); break;
+            case 2: _divisp [i]->set_tmodd (u.f); break;
 	    }
+            break;
+            
+        default:
+            Q->read_commit (1);
 	}
         n = Q->read_avail ();
     }
@@ -553,16 +548,20 @@ void Audio::proc_queue (Lfq_u32 *Q)
 
 void Audio::proc_keys1 (void)
 {    
-    int d, m, n;
+    int       d, n;
+    uint16_t  m;
 
     for (n = 0; n < NNOTES; n++)
     {
 	m = _keymap [n];
-	if (m & 128)
+	if (m & KMAP_SET)
 	{
-            m &= 127;
+            m ^= KMAP_SET;
    	    _keymap [n] = m;
-            for (d = 0; d < _ndivis; d++) _divisp [d]->update (n, m);
+            for (d = 0; d < _ndivis; d++)
+            {
+                _divisp [d]->update (n, m & KMAP_ALL);
+            }
 	}
     }
 }
@@ -572,7 +571,10 @@ void Audio::proc_keys2 (void)
 {    
     int d;
 
-    for (d = 0; d < _ndivis; d++) _divisp [d]->update (_keymap);
+    for (d = 0; d < _ndivis; d++)
+    {
+        _divisp [d]->update (_keymap);
+    }
 }
 
 
@@ -657,7 +659,7 @@ void Audio::proc_mesg (void)
 	    {
 	        M_new_divis  *X = (M_new_divis *) M;
                 Division     *D = new Division (_asectp [X->_asect], (float) _fsamp);
-                D->set_div_mask (X->_dmask);
+                D->set_div_mask (X->_keybd);
                 D->set_swell (X->_swell);
                 D->set_tfreq (X->_tfreq);
                 D->set_tmodd (X->_tmodd);
@@ -669,7 +671,7 @@ void Audio::proc_mesg (void)
 	    case MT_LOAD_RANK:
 	    {
 	        M_def_rank *X = (M_def_rank *) M;
-                _divisp [X->_divis]->set_rank (X->_rank, X->_wave,  X->_sdef->_pan, X->_sdef->_del);  
+                _divisp [X->_divis]->set_rank (X->_rank, X->_rwave,  X->_synth->_pan, X->_synth->_del);  
                 send_event (TO_MODEL, M);
                 M = 0;
 	        break;

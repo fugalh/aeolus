@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -95,6 +95,8 @@ void Division::process (void)
 }
 
 
+// Set or replace the Rankwave for a Rank.
+//
 void Division::set_rank (int ind, Rankwave *W, int pan, int del)
 {
     Rankwave *C;
@@ -102,11 +104,10 @@ void Division::set_rank (int ind, Rankwave *W, int pan, int del)
     C = _ranks [ind];
     if (C)
     {
-	W->_nmask = C->_cmask;
+	W->_nmask = C->_nmask | KMAP_SET;
 	delete C;
     }
-    else W->_nmask = 0;
-    W->_cmask = 0;
+    else W->_nmask = KMAP_SET;
     _ranks [ind] = W;
     del = (int)(1e-3f * del * _fsam / PERIOD);
     if (del > 31) del = 31;
@@ -115,7 +116,9 @@ void Division::set_rank (int ind, Rankwave *W, int pan, int del)
 }
 
 
-void Division::update (int note, int mask)
+// Handle key up down events.
+//
+void Division::update (int note, int16_t mask)
 {
     int             r;
     Rankwave       *W;
@@ -123,27 +126,28 @@ void Division::update (int note, int mask)
     for (r = 0; r < _nrank; r++)
     {
 	W = _ranks [r];
-        if (W->_cmask & 127)
+        if (W->_nmask & KMAP_ALL)
 	{     
-	    if (mask & W->_cmask) W->note_on (note + 36);
+	    if (mask & W->_nmask) W->note_on (note + 36);
 	    else                  W->note_off (note + 36);
 	}
     }
 }
 
 
-void Division::update (unsigned char *keys)
+void Division::update (uint16_t *keys)
 {
-    int            d, r, m, n, n0, n1;
-    unsigned char  *k;
-    Rankwave       *W;
+    int       d, r, m, n, n0, n1;
+    uint16_t  *k;
+    Rankwave  *W;
 
     for (r = 0; r < _nrank; r++)
     {
 	W = _ranks [r];
-        if ((W->_cmask ^ W->_nmask) & 127)
-	{     
-            m = W->_nmask & 127;               
+        if (W->_nmask & KMAP_SET)
+	{
+            W->_nmask ^= KMAP_SET;
+            m = W->_nmask & KMAP_ALL;               
             if (m)
 	    {            
 		n0 = W->n0 ();
@@ -159,54 +163,67 @@ void Division::update (unsigned char *keys)
 	    }
             else W->all_off ();
 	}
-        W->_cmask = W->_nmask;
     }
 }
 
 
-void Division::set_div_mask (int bits)
+void Division::set_div_mask (int bit)
 {
     int       r;
+    uint16_t  b, d;
     Rankwave *W;
 
-    bits &= 127;
-    _dmask |= bits;
+    b = 1 << bit;
+    d = 1 << NKEYBD;
+    _dmask |= b;
     for (r = 0; r < _nrank; r++)
     {
 	W = _ranks [r];
-        if (W->_nmask & 128) W->_nmask |= bits;
+        if (W->_nmask & d)
+        {
+            W->_nmask |= b;
+            W->_nmask |= KMAP_SET;
+        }
+    }
+}
+
+
+void Division::clr_div_mask (int bit)
+{
+    int       r;
+    uint16_t  b, d;
+    Rankwave *W;
+
+    b = 1 << bit;
+    d = 1 << NKEYBD;
+    _dmask &= ~b;
+    for (r = 0; r < _nrank; r++)
+    {
+	W = _ranks [r];
+        if (W->_nmask & d)
+        {
+            W->_nmask &= ~b;
+            W->_nmask |= KMAP_SET;
+        }
     } 
 }
 
 
-void Division::clr_div_mask (int bits)
+void Division::set_rank_mask (int ind, int bit)
 {
-    int       r;
-    Rankwave *W;
-
-    bits &= 127;
-    _dmask &= ~bits;
-    for (r = 0; r < _nrank; r++)
-    {
-	W = _ranks [r];
-        if (W->_nmask & 128) W->_nmask &= ~bits;
-    } 
+    uint16_t  b = 1 << bit;
+    Rankwave *W = _ranks [ind];
+    if (bit == NKEYBD) b |= _dmask;
+    W->_nmask |= b;
+    W->_nmask |= KMAP_SET;
 }
 
 
-void Division::set_rank_mask (int ind, int bits)
+void Division::clr_rank_mask (int ind, int bit)
 {
+    uint16_t  b = 1 << bit;
     Rankwave *W = _ranks [ind];
-
-    if (bits == 128) bits |= _dmask;
-    W->_nmask |= bits;
-}
-
-
-void Division::clr_rank_mask (int ind, int bits)
-{
-    Rankwave *W = _ranks [ind];
-
-    if (bits == 128) bits |= _dmask;
-    W->_nmask &= ~bits;
+    if (bit == NKEYBD) b |= _dmask;
+    W->_nmask &= ~b;
+    W->_nmask |= KMAP_SET;
 }

@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -51,15 +51,16 @@ void Midimatrix::init (M_ifc_init *M)
     _ndivis = 0;
     for (i = 0; i < M->_nkeybd; i++)
     {
-	_label [i] = M->_keybdd [i]._label;
-        _flags [i] = M->_keybdd [i]._flags;    
+        if (i == 16) break;
+	_labels [i] = M->_keybdd [i]._label;
     }
     for (i = 0; i < M->_ndivis; i++)
     {
+        if (i == 16) break;
         if (M->_divisd [i]._flags)
 	{
             _ndivis++;
-            _label [_nkeybd + i] = M->_divisd [i]._label;
+            _labels [_nkeybd + i] = M->_divisd [i]._label;
 	}
     }
     for (i = 0; i < 16; i++) _chconf [i] = 0;
@@ -73,7 +74,7 @@ void Midimatrix::init (M_ifc_init *M)
 void Midimatrix::set_chconf (uint16_t *d)
 {
     plot_allconn ();
-    memcpy (_chconf, d, 16 * sizeof (uint16_t));
+    memcpy (_chconf, d, 16 *  sizeof (uint16_t));
     plot_allconn ();
 }
 
@@ -134,7 +135,7 @@ void Midimatrix::redraw (void)
     for (i = 0, y = YT; i < _nkeybd + _ndivis; i++, y += DY)
     {
         D.move (XL - 40, y + d);
-        D.drawstring (_label [i], 0);
+        D.drawstring (_labels [i], 0);
     }
     x = XL + DX / 2;
     y += DY;
@@ -187,8 +188,8 @@ void Midimatrix::plot_allconn (void)
     for (i = 0; i < 16; i++)
     {
 	m = _chconf [i];
-        if (m & 0x1000) plot_conn (i, m & 7);
-        if (m & 0x2000) plot_conn (i, _nkeybd + ((m >> 8) & 7));
+        if (m & 0x1000) plot_conn (i, m & 15);
+        if (m & 0x2000) plot_conn (i, _nkeybd + ((m >> 4) & 15));
         if (m & 0x4000) plot_conn (i, _nkeybd + _ndivis);
     }       
 }
@@ -210,35 +211,37 @@ void Midimatrix::plot_conn (int x, int y)
 
 void Midimatrix::bpress (XButtonEvent *E)
 {
-    unsigned int i, j, k, x, y;
+    int i, j, k, m, x, y;
 
-    i = (E->x - XL) / DX;
-    j = (E->y - YT) / DY;
-    x = E->x - XL - 4 - i * DX;
-    y = E->y - YT - 4 - j * DY;
-    if ((i > 15) || ((int) j > _nkeybd + _ndivis) || (x > DX - 2) || (y > DY - 2)) return;
-    _chan = i; 
+    x = E->x - XL;
+    y = E->y - YT;
+    if ((x < 0) || (y < 0)) return;
+    i = x / DX;
+    j = y / DY;
+    m = _nkeybd + _ndivis;
+    if ((i < 0) || (i > 16)) return;
+    if ((j < 0) || (j >  m)) return;
 
-    if ((int) j < _nkeybd)
+    if (j < _nkeybd)
     {
-        k = (_chconf [i] & 0x1000) ? (_chconf [i] & 7) : 8;
-        _chconf [i] &= 0x6700; 
+        k = (_chconf [i] & 0x1000) ? (_chconf [i] & 15) : -1;
+        _chconf [i] &= 0x6FF0; 
         if (k != j)
 	{
             _chconf [i] |= 0x1000 | j;
-            if (k < 8) plot_conn (i, k);
+            if (k >= 0) plot_conn (i, k);
 	}
         plot_conn (i, j);
     }
-    else if ((int) j < _nkeybd + _ndivis)
+    else if (j < _nkeybd + _ndivis)
     {
         j -= _nkeybd;
-        k = (_chconf [i] & 0x2000) ? ((_chconf [i] >> 8) & 7) : 8;
-        _chconf [i] &= 0x5007; 
+        k = (_chconf [i] & 0x2000) ? ((_chconf [i] >> 4) & 15) : -1;
+        _chconf [i] &= 0x5F0F; 
         if (k != j)
 	{
-            _chconf [i] |= 0x2000 | (j << 8);
-            if (k < 8) plot_conn (i, k + _nkeybd);
+            _chconf [i] |= 0x2000 | (j << 4);
+            if (k >= 0) plot_conn (i, k + _nkeybd);
 	}
         plot_conn (i, j + _nkeybd);
     }

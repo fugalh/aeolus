@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,9 @@ class Pipewave
 private:
 
     Pipewave (void) :
-        _p0 (0), _p1 (0), _p2 (0), _l1 (0), _k_s (0),  _k_r (0), _m_r (0),
+        _p0 (0), _p1 (0), _p2 (0), _l1 (0),
+        _k_s (0),  _k_r (0), 
+        _m_r (0), _d_r (0), _d_a (0), _d_w (0),
 	_link (0), _sbit (0), _sdel (0), 
         _p_p (0), _y_p (0), _z_p (0), _p_r (0), _y_r (0), _g_r (0), _i_r (0)
     {}     
@@ -60,7 +62,8 @@ private:
     int16_t    _k_r;   // release lenght
     float      _m_r;   // release multiplier
     float      _d_r;   // release detune
-    float      _d_p;   // instability
+    float      _d_a;   // instability amplitude
+    float      _d_w;   // instability bandwidth
 
     Pipewave  *_link;  // link to next in active chain
     uint32_t   _sbit;  // on state bit  
@@ -126,7 +129,6 @@ public:
     int  load (const char *path, Addsynth *D, float fsamp, float fbase, float *scale);
     bool modif (void) const { return _modif; }
 
-    int  _cmask;  // used by division logic 
     int  _nmask;  // used by division logic
 
 private:

@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -139,7 +139,7 @@ void Pipewave::play (void)
         else 
 	{
             y = _y_p;  
-            _z_p += _d_p * 0.0005f * (0.05f * _d_p * (_rgen.urandf () - 0.5f) - _z_p);
+            _z_p += _d_w * (_d_a * (_rgen.urandf () - 0.5f) - _z_p);
             dy = _z_p * _k_s;
             while (k--)
 	    {            
@@ -212,8 +212,11 @@ void Pipewave::genwave (Addsynth *D, int n, float fsamp, float fpipe)
     _k_r = (int)(ceilf (D->_n_dct.vi (n) * fsamp / PERIOD) + 1);          
     _m_r = 1.0f - powf (0.1, 1.0 / _k_r); 
     _d_r = _k_s * (exp2ap (D->_n_dcd.vi (n) / 1200.0f) - 1.0f);
-    _d_p = D->_n_ins.vi (n);
 
+    v = D->_n_ins.vi (n);
+    _d_a = v * fsamp / 960e3;
+    _d_w = 24 * v / fsamp;
+    
     t = 0.0f;
     k = (int)(fsamp * D->_n_att.vi (n) + 0.5);
     for (i = 0; i <= _l0; i++)
@@ -337,9 +340,9 @@ void Pipewave::save (FILE *F)
     d.i16 [4] = _k_s;
     d.i16 [5] = _k_r;
     d.flt [3] = _m_r;
-    d.i32 [4] = 0;
-    d.i32 [5] = 0;
-    d.i32 [6] = 0;
+    d.flt [4] = _d_r;
+    d.flt [5] = _d_a;
+    d.flt [6] = _d_w;
     d.i32 [7] = 0;
     fwrite (&d, 1, 32, F);
     k = _l0 +_l1 + _k_s * (PERIOD + 4);
@@ -363,12 +366,15 @@ void Pipewave::load (FILE *F)
     _k_s = d.i16 [4];
     _k_r = d.i16 [5];
     _m_r = d.flt [3];
+    _d_r = d.flt [4];
+    _d_a = d.flt [5];
+    _d_w = d.flt [6];
     k = _l0 +_l1 + _k_s * (PERIOD + 4);
     delete[] _p0;
     _p0 = new float [k];
     _p1 = _p0 + _l0;
     _p2 = _p1 + _l1;
-    fread (_p0, k, sizeof (float), F);   
+    fread (_p0, k, sizeof (float), F);
 }
 
 
@@ -456,7 +462,7 @@ int Rankwave::save (const char *path, Addsynth *D, float fsamp, float fbase, flo
    
     memset (data, 0, 16);
     strcpy (data, "ae1");
-    data [4] = 1;
+    data [4] = 2;
     fwrite (data, 1, 16, F);
 
     memset (data, 0, 64);
@@ -515,7 +521,7 @@ int Rankwave::load (const char *path, Addsynth *D, float fsamp, float fbase, flo
         return 1;
     }
 
-    if (data [4] != 1)
+    if (data [4] != 2)
     {
 #ifdef DEBUG
 	fprintf (stderr, "File '%s' has an incompatible version tag (%d)\n", name, data [4]);

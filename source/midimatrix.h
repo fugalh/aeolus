@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ public:
 private:
 
     enum { XL = 180, XR = 5, YT = 5, YB = 22, DX = 22, DY = 22 };
-
+    
     void expose (XExposeEvent *E);
     void redraw (void);
     void plot_grid (void);
@@ -53,15 +53,13 @@ private:
     void bpress (XButtonEvent *E);
 
     X_callback     *_callb;
-    bool            _mapped;
     int             _xs;
     int             _ys;
+    bool            _mapped;
     int             _nkeybd;
     int             _ndivis;
-    const char     *_label [15];
-    uint16_t        _flags [6];
     uint16_t        _chconf [16];
-    int             _chan;
+    const char     *_labels [32];
 };
 
 

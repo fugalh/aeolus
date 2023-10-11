@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -240,7 +240,7 @@ int Addsynth::save (const char *sdir)
 
     memset (d, 0, 32);
     strcpy (d, "AEOLUS");
-    d [7]  =  2;
+    d [7]  =  2;       // Version
     d [26] = N_HARM;
     d [28] = _n0;
     d [29] = _n1;

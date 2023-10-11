@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -659,13 +659,12 @@ void Editwin::fun_update (N_func *D, Functionwin *F, int d)
 }
 
 
-void Editwin::init (Addsynth *sdef)
+void Editwin::init (Addsynth *synth)
 {
     int   i;
     char  s [256];
 
-    _edit = sdef;
- 
+    _edit = synth;
     _lev_harm = 0;
     _lev_note = 4;
     _att_harm = 0;

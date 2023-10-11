@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------
 #
-#  Copyright (C) 2003-2018 Fons Adriaensen <fons@linuxaudio.org>
+#  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 #    
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib$(SUFFIX)
 
-VERSION = 0.9.9
+VERSION = 0.10.3
 CPPFLAGS += -MMD -MP -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(LIBDIR)\"
 CXXFLAGS += -O2 -Wall
 CXXFLAGS += -march=native

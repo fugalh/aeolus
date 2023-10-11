@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -72,42 +72,42 @@ private:
     void proc_keys2 (void);
     void proc_mesg (void);
 
-    void key_off (int n, int b)
+    void key_off (int i, int b)
     {
-        _keymap [n] &= ~b;
-        _keymap [n] |= 128;
+        _keymap [i] &= ~b;
+        _keymap [i] |= KMAP_SET;
     }
 
-    void key_on (int n, int b)
+    void key_on (int i, int b)
     {
-        _keymap [n] |= b | 128;
+        _keymap [i] |= b | KMAP_SET;
     }
 
     void cond_key_off (int m, int b)
     {
-	int            i;
-	unsigned char  *p;
+	int       i;
+	uint16_t  *p;
 
 	for (i = 0, p = _keymap; i < NNOTES; i++, p++)
 	{
             if (*p & m)
 	    {
                 *p &= ~b;
-		*p |= 128;
+		*p |= KMAP_SET;
 	    }
 	}
     }
 
     void cond_key_on (int m, int b)
     {
-	int            i;
-	unsigned char  *p;
+	int       i;
+	uint16_t  *p;
 
 	for (i = 0, p = _keymap; i < NNOTES; i++, p++)
 	{
             if (*p & m)
 	    {
-                *p |= b | 128;
+                *p |= b | KMAP_SET;
 	    }
 	}
     }
@@ -144,7 +144,7 @@ private:
     Division       *_divisp [NDIVIS];
     Reverb          _reverb;
     float          *_outbuf [8];
-    unsigned char   _keymap [NNOTES];
+    uint16_t        _keymap [NNOTES];
     Fparm           _audiopar [4];
     float           _revsize;
     float           _revtime;

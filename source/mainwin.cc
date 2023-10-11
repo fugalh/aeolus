@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ void Splashwin::expose (XExposeEvent *E)
     D.drawstring (s, 0); 
     D.setfont (XftFonts.spla2);
     D.move (x, y);
-    D.drawstring ("(C) 2003-2013 Fons Adriaensen", 0); 
+    D.drawstring ("(C) 2003-2022 Fons Adriaensen", 0); 
     D.move (x, y + 50);
     D.drawstring ("This is free software, and you are welcome to distribute it", 0); 
     D.move (x, y + 70);
@@ -162,7 +162,6 @@ void Mainwin::handle_callb (int k, X_window *W, XEvent *E)
     {
         B = (X_button *) W;
         k = B->cbid ();
-
         if (k >= CB_GLOB_SAVE) _callb->handle_callb (k, this, E);
         else if (k < GROUP_STEP)
 	{

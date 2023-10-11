@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ class Rank
 public:
 
     int         _count;
-    Addsynth   *_sdef;
-    Rankwave   *_wave;
+    Addsynth   *_synth;
+    Rankwave   *_rwave;
 };
 
     
@@ -54,7 +54,7 @@ class Divis
 {
 public:
 
-    enum { HAS_SWELL = 1, HAS_TREM = 2, NRANK = 32 };
+    enum { HAS_SWELL = 1, HAS_TREM = 2 };
     enum { SWELL, TFREQ, TMODD, NPARAM };
 
     Divis (void);
@@ -66,7 +66,7 @@ public:
     int         _asect;
     int         _keybd;
     Fparm       _param [NPARAM];
-    Rank        _ranks [NRANK];
+    Rank        _ranks [NRANKS];
 };
 
     
@@ -74,12 +74,10 @@ class Keybd
 {
 public:
 
-    enum { IS_PEDAL = 256 };
-
     Keybd (void);
 
     char    _label [16];
-    int     _flags;
+    bool    _pedal;
 };
 
     
@@ -105,7 +103,7 @@ class Group
 {
 public:
 
-    enum { NIFELM = 32 };
+    enum { NIFELM = NRANKS + 8 };
 
     Group (void);
 
@@ -115,11 +113,14 @@ public:
 };
 
 
-class Chconf
+class Midiconf
 {
 public:
 
-    Chconf (void) { memset (_bits, 0, 16 * sizeof (uint16_t)); }
+    Midiconf (void)
+    {
+        memset (_bits, 0, 16 * sizeof (uint16_t));
+    }
 
     uint16_t  _bits [16];
 };
@@ -190,9 +191,9 @@ private:
     Lfq_u8         *_qmidi; 
     uint16_t       *_midimap;
     const char     *_appname;
-    const char     *_stops;
-    char            _instr [1024];
-    char            _waves [1024];
+    const char     *_stopsdir;
+    char            _instrdir [1024];
+    char            _wavesdir [1024];
     bool            _uhome;
     bool            _ready;
 
@@ -214,7 +215,7 @@ private:
     int             _portid;
     int             _sc_cmode; // stop control command mode
     int             _sc_group; // stop control group number
-    Chconf          _chconf [8];
+    Midiconf        _chconf [8];
     Preset         *_preset [NBANK][NPRES];
     M_audio_info   *_audio;
     M_midi_info    *_midi;

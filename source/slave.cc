@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ void Slave::thr_main (void)
             {
                 M_def_rank *X = (M_def_rank *) M;
                 send_event (TO_MODEL, new M_ifc_ifelm (MT_IFC_ELATT, X->_group, X->_ifelm)); 
-                X->_wave = new Rankwave (X->_sdef->_n0, X->_sdef->_n1);
-                X->_wave->gen_waves (X->_sdef, X->_fsamp, X->_fbase, X->_scale); 
+                X->_rwave = new Rankwave (X->_synth->_n0, X->_synth->_n1);
+                X->_rwave->gen_waves (X->_synth, X->_fsamp, X->_fbase, X->_scale);
                 send_event (TO_AUDIO, M);
                 break;
 	    }
@@ -47,10 +47,10 @@ void Slave::thr_main (void)
             {
                 M_def_rank *X = (M_def_rank *) M;
                 send_event (TO_MODEL, new M_ifc_ifelm (MT_IFC_ELATT, X->_group, X->_ifelm)); 
-                X->_wave = new Rankwave (X->_sdef->_n0, X->_sdef->_n1);
-                if (X->_wave->load (X->_path, X->_sdef, X->_fsamp, X->_fbase, X->_scale)) 
+                X->_rwave = new Rankwave (X->_synth->_n0, X->_synth->_n1);
+                if (X->_rwave->load (X->_path, X->_synth, X->_fsamp, X->_fbase, X->_scale)) 
                 {
-                    X->_wave->gen_waves (X->_sdef, X->_fsamp, X->_fbase, X->_scale); 
+                    X->_rwave->gen_waves (X->_synth, X->_fsamp, X->_fbase, X->_scale); 
 		} 
                 send_event (TO_AUDIO, M);
                 break;
@@ -59,7 +59,7 @@ void Slave::thr_main (void)
             case MT_SAVE_RANK:
             {
                 M_def_rank *X = (M_def_rank *) M;
-                X->_wave->save (X->_path, X->_sdef, X->_fsamp, X->_fbase, X->_scale); 
+                X->_rwave->save (X->_path, X->_synth, X->_fsamp, X->_fbase, X->_scale); 
                 M->recover ();
                 break;
 	    }

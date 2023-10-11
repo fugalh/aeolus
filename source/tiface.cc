@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -253,8 +253,8 @@ void Tiface::handle_ifc_txtip (M_ifc_txtip *M)
 void Tiface::print_info (void)
 {
     printf ("Application id:  %s\n", _initdata->_appid);
-    printf ("Stops directory: %s\n", _initdata->_stops);
-    printf ("Instrument:      %s\n", _initdata->_instr);
+    printf ("Stops directory: %s\n", _initdata->_stopsdir);
+    printf ("Instrument:      %s\n", _initdata->_instrdir);
     printf ("ALSA Midi port:  %d:%d\n", _initdata->_client, _initdata->_ipport);
     print_keybdd ();
     print_divisd ();

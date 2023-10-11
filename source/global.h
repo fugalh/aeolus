@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //    
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -21,17 +21,7 @@
 #ifndef __GLOBAL_H
 #define __GLOBAL_H
 
-
-#ifdef __APPLE__
-#include <machine/endian.h>
-#define __LITTLE_ENDIAN	__DARWIN_LITTLE_ENDIAN
-#define __BIG_ENDIAN	__DARWIN_BIG_ENDIAN
-#define __PDP_ENDIAN	__DARWIN_PDP_ENDIAN
-#define	__BYTE_ORDER	__DARWIN_BYTE_ORDER
-#else
 #include <endian.h>
-#endif
-
 #ifdef __BYTE_ORDER
 #if (__BYTE_ORDER == __LITTLE_ENDIAN)
 #define WR2(p,v) { (p)[0] = v; (p)[1] = v >> 8; }
@@ -57,8 +47,9 @@ enum // GLOBAL LIMITS
 {
     NASECT = 4,
     NDIVIS = 8,
-    NKEYBD = 6,
+    NKEYBD = 8,
     NGROUP = 8,
+    NRANKS = 32,
     NNOTES = 61,
     NBANK  = 32,
     NPRES  = 32
@@ -86,9 +77,9 @@ enum // GLOBAL LIMITS
 #define MIDICTL_ASOFF 120
 #define MIDICTL_ANOFF 123
 
-#define KEYS_MASK 63
-#define HOLD_MASK 64
-#define ALL_MASK 127
+
+#define KMAP_ALL  0x0FFF 
+#define KMAP_SET  0x8000  // Set if mask or keymap entry is modified.
 
 
 class Fparm
