@@ -239,18 +239,18 @@ int main (int ac, char *av [])
     ITC_ctrl::connect (iface, TO_MODEL, model, FM_IFACE);    
 
     audio->start ();
-    if (imidi->thr_start (SCHED_FIFO, audio->relpri () - 20, 0x00010000))
+    if (imidi->thr_start (SCHED_FIFO, audio->relpri () - 20, 0))
     {
         fprintf (stderr, "Warning: can't run midi thread in RT mode.\n");
-	imidi->thr_start (SCHED_OTHER, 0, 0x00010000);
+	imidi->thr_start (SCHED_OTHER, 0, 0);
     }
-    if (model->thr_start (SCHED_FIFO, audio->relpri () - 30, 0x00010000))
+    if (model->thr_start (SCHED_FIFO, audio->relpri () - 30, 0))
     {
         fprintf (stderr, "Warning: can't run model thread in RT mode.\n");
-	model->thr_start (SCHED_OTHER, 0, 0x00010000);
+	model->thr_start (SCHED_OTHER, 0, 0);
     }
-    slave->thr_start (SCHED_OTHER, 0, 0x00010000);
-    iface->thr_start (SCHED_OTHER, 0, 0x00020000);
+    slave->thr_start (SCHED_OTHER, 0, 0);
+    iface->thr_start (SCHED_OTHER, 0, 0);
 
     signal (SIGINT, sigint_handler); 
     n = 4;
