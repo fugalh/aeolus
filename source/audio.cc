@@ -530,11 +530,11 @@ void Audio::proc_queue (Lfq_u32 *Q)
 	    if (n < 2) return;
             u.i = Q->read (1);
             Q->read_commit (2);        
-            switch (j)
+            switch (i)
  	    {
-            case 0: _divisp [i]->set_swell (u.f); break;
-            case 1: _divisp [i]->set_tfreq (u.f); break;
-            case 2: _divisp [i]->set_tmodd (u.f); break;
+            case 0: _divisp [j]->set_swell (u.f); break;
+            case 1: _divisp [j]->set_tfreq (u.f); break;
+            case 2: _divisp [j]->set_tmodd (u.f); break;
 	    }
             break;
             
