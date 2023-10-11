@@ -478,7 +478,7 @@ void Mainwin::set_butt (void)
 
 void Mainwin::upd_pres (void)
 {
-    char s [8];
+    char s [80];
 
     sprintf (s, "%d", (_local ? _b_loc : _b_mod) + 1);
     _t_bank->set_text (s);

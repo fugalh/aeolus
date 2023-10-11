@@ -1,9 +1,9 @@
-AEOLUS 0.9.0  BUILD INSTRUCTIONS (LINUX)
+AEOLUS 0.9.5  BUILD INSTRUCTIONS (LINUX)
 _______________________________________
 
 
 To build this version, you need to have the shared
-libraries
+libraries (or newer releases with the same major version):
 
 *  libzita-alsa-pcmi.so.0.2.0
 *  libclthreads.so.2.4.0

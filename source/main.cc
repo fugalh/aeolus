@@ -250,7 +250,7 @@ int main (int ac, char *av [])
 	model->thr_start (SCHED_OTHER, 0, 0x00010000);
     }
     slave->thr_start (SCHED_OTHER, 0, 0x00010000);
-    iface->thr_start (SCHED_OTHER, 0, 0x00010000);
+    iface->thr_start (SCHED_OTHER, 0, 0x00020000);
 
     signal (SIGINT, sigint_handler); 
     n = 4;

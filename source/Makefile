@@ -21,7 +21,7 @@
 PREFIX = /usr/local
 SUFFIX := $(shell uname -m | sed -e 's/^unknown/$//' -e 's/^i.86/$//' -e 's/^x86_64/$/64/')
 LIBDIR = lib$(SUFFIX)
-VERSION = 0.9.0
+VERSION = 0.9.5
 DISTDIR = aeolus-$(VERSION)
 CPPFLAGS += -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(PREFIX)/$(LIBDIR)\"
 CXXFLAGS += -O3 -Wall -MMD -MP

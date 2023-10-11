@@ -101,7 +101,7 @@ void Imidi::open_midi (void)
     M_midi_info *M = new M_midi_info ();
     M->_client = 0; 
     M->_ipport = 0;
-    memcpy (M->_chbits, _midimap, 16);
+    memcpy (M->_chbits, _midimap, 16 * sizeof (uint16_t));
     send_event (TO_MODEL, M);
 }
 

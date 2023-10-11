@@ -99,7 +99,7 @@ void Imidi::open_midi (void)
     M = new M_midi_info ();
     M->_client = _client;
     M->_ipport = _ipport;
-    memcpy (M->_chbits, _midimap, 16);
+    memcpy (M->_chbits, _midimap, 16 * sizeof (uint16_t));
     send_event (TO_MODEL, M);
 }
 
