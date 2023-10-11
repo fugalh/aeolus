@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------
 #
-#  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+#  Copyright (C) 2003-2018 Fons Adriaensen <fons@linuxaudio.org>
 #    
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,15 +17,16 @@
 #
 # -------------------------------------------------------------------------
 
-
-PREFIX = /usr/local
 SUFFIX := $(shell uname -m | sed -e 's/^unknown/$//' -e 's/^i.86/$//' -e 's/^x86_64/$/64/')
-LIBDIR = lib$(SUFFIX)
-VERSION = 0.9.5
-DISTDIR = aeolus-$(VERSION)
-CPPFLAGS += -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(PREFIX)/$(LIBDIR)\"
-CXXFLAGS += -O3 -Wall -MMD -MP
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+LIBDIR ?= $(PREFIX)/lib$(SUFFIX)
+
+VERSION = 0.9.7
+CPPFLAGS += -MMD -MP -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(LIBDIR)\"
+CXXFLAGS += -O2 -Wall
 CXXFLAGS += -march=native
+
 
 all:	aeolus aeolus_x11.so aeolus_txt.so
 
@@ -33,44 +34,46 @@ all:	aeolus aeolus_x11.so aeolus_txt.so
 AEOLUS_O =	main.o audio.o model.o slave.o imidi.o addsynth.o scales.o \
 		reverb.o asection.o division.o rankwave.o rngen.o exp2ap.o lfqueue.o
 aeolus:	LDLIBS += -lzita-alsa-pcmi -lclthreads -ljack -lasound -lpthread -ldl -lrt
-aeolus: LDFLAGS += -L$(PREFIX)/$(LIBDIR)
+aeolus: LDFLAGS += -L$(LIBDIR)
 aeolus:	$(AEOLUS_O)
-	g++ $(LDFLAGS) -o $@ $(AEOLUS_O) $(LDLIBS)
-
-addsynth.o:	CPPFLAGS += -fpic -D_REENTRANT
+	$(CXX) $(LDFLAGS) -o $@ $(AEOLUS_O) $(LDLIBS)
+addsynth.o:	CPPFLAGS += -fPIC -D_REENTRANT
 $(AEOLUS_O):
 -include $(AEOLUS_O:%.o=%.d)
 
 
-XIFACE_O =	styles.o mainwin.o midiwin.o audiowin.o instrwin.o editwin.o midimatrix.o \
-		multislider.o functionwin.o xiface.o addsynth.o
-aeolus_x11.so:	CXXFLAGS += -fPIC
-aeolus_x11.so:	CPPFLAGS += -D_REENTRANT -I/usr/X11R6/include -I/usr/include/freetype2
+XIFACE_O =	styles.o mainwin.o midiwin.o audiowin.o instrwin.o editwin.o \
+	midimatrix.o multislider.o functionwin.o xiface.o addsynth.o
+aeolus_x11.so:	CPPFLAGS += -D_REENTRANT
+aeolus_x11.so:	CPPFLAGS += $(shell pkgconf --cflags freetype2)
+aeolus_x11.so:	CXXFLAGS += -shared -fPIC
+aeolus_x11.so:	LDFLAGS += -shared
 aeolus_x11.so:	LDLIBS += -lclthreads -lclxclient -lpthread -lXft -lX11
-aeolus_x11.so:	LDFLAGS += -shared -L$(PREFIX)/$(LIBDIR) -L/usr/X11R6/$(LIBDIR)
 aeolus_x11.so: $(XIFACE_O) $(LIBCLX)
-	g++ $(LDFLAGS) -o $@ $(XIFACE_O) $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(XIFACE_O) $(LDLIBS)
 
 $(XIFACE_O):
 -include $(XIFACE_O:%.o=%.d)
 
 
 TIFACE_O =	tiface.o
-aeolus_txt.so:	CXXFLAGS += -fPIC
 aeolus_txt.so:	CPPFLAGS += -D_REENTRANT
+aeolus_txt.so:	CXXFLAGS += -shared -fPIC
+aeolus_txt.so:	LDFLAGS += -shared
 aeolus_txt.so:	LDLIBS += -lclthreads -lpthread -lreadline
-aeolus_txt.so:	LDFLAGS += -shared -L$(PREFIX)/$(LIBDIR)
 aeolus_txt.so: $(TIFACE_O)
-	g++ $(LDFLAGS) -o $@ $(TIFACE_O) $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(TIFACE_O) $(LDLIBS)
 
 $(TIFACE_O):
 -include $(TIFACE_O:%.o=%.d)
 
 
 install:	aeolus aeolus_x11.so aeolus_txt.so 
-	install -Dm 755 aeolus $(DESTDIR)$(PREFIX)/bin/aeolus
-	install -Dm 755 aeolus_x11.so $(DESTDIR)$(PREFIX)/$(LIBDIR)/aeolus_x11.so
-	install -Dm 755 aeolus_txt.so $(DESTDIR)$(PREFIX)/$(LIBDIR)/aeolus_txt.so
+	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(LIBDIR)
+	install -m 755 aeolus $(DESTDIR)$(BINDIR)
+	install -m 755 aeolus_x11.so $(DESTDIR)$(LIBDIR)
+	install -m 755 aeolus_txt.so $(DESTDIR)$(LIBDIR)
 	ldconfig $(PREFIX)/$(LIBDIR)
 
 

@@ -113,7 +113,7 @@ void Imidi::close_midi (void)
 void Imidi::proc_midi (void) 
 {
     snd_seq_event_t  *E;
-    int              c, d, f, m, n, p, t, v;
+    int              c, f, m, n, p, t, v;
 
     // Read and process MIDI commands from the ALSA port.
     // Events related to keyboard state are sent to the 
@@ -125,7 +125,7 @@ void Imidi::proc_midi (void)
 	snd_seq_event_input(_handle, &E);
         c = E->data.note.channel;               
         m = _midimap [c] & 127;        // Keyboard and hold bits
-        d = (_midimap [c] >>  8) & 7;  // Division number if (f & 2)
+//        d = (_midimap [c] >>  8) & 7;  // Division number if (f & 2)
         f = (_midimap [c] >> 12) & 7;  // Control enabled if (f & 4)
 
         t = E->type;

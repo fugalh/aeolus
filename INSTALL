@@ -5,9 +5,9 @@ _______________________________________
 To build this version, you need to have the shared
 libraries (or newer releases with the same major version):
 
-*  libzita-alsa-pcmi.so.0.2.0
-*  libclthreads.so.2.4.0
-*  libclxclient.so.3.9.0
+*  libzita-alsa-pcmi.so.0.3.*
+*  libclthreads.so.2.4.*
+*  libclxclient.so.3.9.*
 
 and the corresponding header files installed.
 They should be available from the same place where
@@ -41,14 +41,6 @@ After a successful install you may do a 'make clean'.
 Please report any problems (and solutions) to <fons@linuxaudio.org>.
 
 See also the README file for run-time configuration.
-
-
-AEOLUS 0.9.0  BUILD INSTRUCTIONS (OSX)
-_____________________________________
-
-
-See the file INSTALL-osx
-
 
 -- 
 FA

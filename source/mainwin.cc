@@ -156,7 +156,7 @@ void Mainwin::handle_callb (int k, X_window *W, XEvent *E)
     int          g, i;
     X_button     *B;
     XButtonEvent *Z;
-    char         s [24];
+    char         s [256];
 
     if (k == (BUTTON | X_button::PRESS))
     {
@@ -423,7 +423,7 @@ void Mainwin::set_ifelm (M_ifc_ifelm *M)
 
 void Mainwin::set_state (M_ifc_preset *M)
 {
-    char s [24];
+    char s [256];
   
     if (M->_stat)
     {

@@ -102,7 +102,7 @@ void Pipewave::play (void)
                 d = 0;
                 k2 = k1;  
                 if (t > 1.0f)
-	        {
+                {
 		    d = 1; 
                     k2 = (int)((1.0f - y) / dy); 
                 }

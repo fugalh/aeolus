@@ -1,3 +1,9 @@
+AEOLUS 0.9.7   RELEASE NOTES   25/08/2018
+============================
+
+Maintenance release.
+
+
 AEOLUS 0.9.5   RELEASE NOTES   05/05/2017
 ============================
 
@@ -157,28 +163,13 @@ Command line options are:
          -p <period size>        (1024)
          -n <number of periods>  (2) 
 
-(output channels)
-
-  -C  <number of channels> 
-
-         The default is 2 (stereo). Other legal values
-         are 4 for four speakers in a square and 8 for
-         eight speaker in cube setup. The built-in 
-         Ambisonics decoder used for the latter two 
-         formats is quite primitive and will be removed
-         in future versions, to be replaced with a much
-         better external application.
-
-         Speaker order for -C 4 is clockwise starting at
-         front-left. For -C 8 the first four outputs are
-         the 'bottom' speakers, and the next four the
-         'top' ones, each of them in the same order as
-         for -C 4.
+(output format)
 
   -B     This options selects direct Ambisionics first order
          B-format output, to be used for recording or with
-         an external decoder.
- 
+         an external decoder. The default is stereo output.
+
+
 (resources)
 
   -S  <stops directory>

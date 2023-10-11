@@ -299,7 +299,7 @@ int Audio::jack_callback (jack_nframes_t nframes)
 
 void Audio::proc_jmidi (int tmax) 
 {
-    int                 c, d, f, m, n, t, v;
+    int                 c, f, m, n, t, v;
     jack_midi_event_t   E;
 
     // Read and process MIDI commands from the JACK port.
@@ -315,7 +315,7 @@ void Audio::proc_jmidi (int tmax)
 	v = E.buffer [2];
 	c = t & 0x0F;
         m = _midimap [c] & 127;        // Keyboard and hold bits
-        d = (_midimap [c] >>  8) & 7;  // Division number if (f & 2)
+//        d = (_midimap [c] >>  8) & 7;  // Division number if (f & 2)
         f = (_midimap [c] >> 12) & 7;  // Control enabled if (f & 4)
 
 	switch (t & 0xF0)

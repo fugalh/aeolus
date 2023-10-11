@@ -818,7 +818,7 @@ int Model::read_instr (void)
     bool          instr;
     int           d, k, r, s;
     char          c, *p, *q;
-    char          buff [1024];
+    char          buff [1200];
     char          t1 [256];
     char          t2 [256];
     Keybd         *K;
@@ -1165,7 +1165,7 @@ int Model::write_instr (void)
 {
     FILE          *F;
     int           d, g, i, k, r;
-    char          buff [1024];
+    char          buff [1200];
     time_t        t;
     Divis         *D;
     Rank          *R;
@@ -1316,7 +1316,7 @@ void Model::del_preset (int bank, int pres)
 int Model::read_presets (void)
 {
     int            i, j, k, n;
-    char           name [1024];
+    char           name [1200];
     unsigned char  *p, data [256];
     FILE           *F;
     Preset         *P;
@@ -1396,7 +1396,7 @@ int Model::read_presets (void)
 int Model::write_presets (void)
 {
     int            i, j, k, v;
-    char           name [1024];
+    char           name [1200];
     unsigned char  *p, data [256];
     FILE           *F;
     Preset         *P;

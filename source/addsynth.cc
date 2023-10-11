@@ -55,7 +55,7 @@ void N_func::setv (int i, float v)
     if (j < 0) while (++j != i) _v [j] = v;
     else
     {
-	d = (_v [j] - v) / (j - i);
+        d = (_v [j] - v) / (j - i);
         while (++j != i) _v [j] = v + (j - i) * d;
     }
 
@@ -63,7 +63,7 @@ void N_func::setv (int i, float v)
     if (j > M) while (--j != i) _v [j] = v;
     else
     {
-	d = (_v [j] - v) / (j - i);
+        d = (_v [j] - v) / (j - i);
         while (--j != i) _v [j] = v + (j - i) * d;
     }
 }
@@ -84,17 +84,17 @@ void N_func::clrv (int i)
 
     if ((j >= 0) && (k <= M))
     {
-	d = (_v [k] - _v [j]) / (k - j);
+        d = (_v [k] - _v [j]) / (k - j);
         for (i = j + 1; i < k; i++) _v [i] = _v [j] + (i - j) * d;
     }
     else if (j >= 0)
     {
-	d = _v [j];
+        d = _v [j];
         while (j < M) _v [++j] = d; 
     }
     else if (k <= M)
     {
-	d = _v [k];
+        d = _v [k];
         while (k > 0) _v [--k] = d; 
     }
 }
@@ -234,7 +234,7 @@ int Addsynth::save (const char *sdir)
     
     if (! (F = fopen (path, "w")))
     {
-	fprintf (stderr, "Can't open '%s' for writing\n", path);
+        fprintf (stderr, "Can't open '%s' for writing\n", path);
         return 1;
     }
 
@@ -287,14 +287,14 @@ int Addsynth::load (const char *sdir)
 
     if (! (F = fopen (path, "r")))
     {
-	fprintf (stderr, "Can't open '%s' for reading\n", path);
+        fprintf (stderr, "Can't open '%s' for reading\n", path);
         return 1;
     }
 
     fread (d, 1, 32, F);
     if (strcmp (d, "AEOLUS"))
     {
-	fprintf (stderr, "File '%s' is not an Aeolus file\n", _filename);
+        fprintf (stderr, "File '%s' is not an Aeolus file\n", _filename);
         fclose (F); 
         return 1;
     }
