@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -33,14 +33,14 @@
 class Diffuser
 {
 public:
-    
+
     void init (int size, float c);
     void fini (void);
     int  size (void) { return _size; }
     float process (float x)
     {
         float w;
- 
+
         w = x - _c * _data [_i];
         x = _data [_i] + _c * w;
         _data [_i] = w;
@@ -62,14 +62,14 @@ class Asection
 public:
 
     Asection (float fsam);
-    ~Asection (void); 
+    ~Asection (void);
 
     float *get_wptr (void) { return _base + _offs0; }
     Fparm *get_apar (void) { return _apar; }
 
     void set_size (float size);
     void process (float vol, float *W, float *X, float *Y, float *R);
-    
+
     static float _refl [16];
 
 private:

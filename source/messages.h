@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -76,7 +76,7 @@ enum
     MT_IFC_PRDEC,
     MT_IFC_PRINC,
     MT_IFC_PRSTO,
-    MT_IFC_PRINS,    
+    MT_IFC_PRINS,
     MT_IFC_PRDEL,
     MT_IFC_PRGET,
     MT_IFC_EDIT,
@@ -160,7 +160,7 @@ public:
     const char         *_stopsdir;
     const char         *_wavesdir;
     const char         *_instrdir;
-    const char         *_appid; 
+    const char         *_appid;
     int                 _client;
     int                 _ipport;
     int                 _nasect;
@@ -168,33 +168,33 @@ public:
     int                 _ndivis;
     int                 _ngroup;
     int                 _ntempe;
-    struct 
+    struct
     {
-	const char     *_label;
-        bool            _pedal;               
-    }                   _keybdd [NKEYBD];     
-    struct 
+        const char     *_label;
+        bool            _pedal;
+    }                   _keybdd [NKEYBD];
+    struct
     {
         const char     *_label;
         int             _asect;
         int             _flags;
-    }                   _divisd [NDIVIS];     
-    struct 
+    }                   _divisd [NDIVIS];
+    struct
     {
         const char     *_label;
-	int             _nifelm;
-	struct
-	{
+        int             _nifelm;
+        struct
+        {
             const char *_label;
             const char *_mnemo;
             int         _type;
-	}               _ifelmd [32];
-    }                   _groupd [8];     
-    struct 
+        }               _ifelmd [32];
+    }                   _groupd [8];
+    struct
     {
         const char     *_label;
         const char     *_mnemo;
-    }                   _temped [16];     
+    }                   _temped [16];
 };
 
 
@@ -255,7 +255,7 @@ class M_ifc_retune : public ITC_mesg
 {
 public:
 
-    M_ifc_retune (float f, int t) : 
+    M_ifc_retune (float f, int t) :
         ITC_mesg (MT_IFC_RETUNE),
         _freq (f),
         _temp (t)
@@ -274,11 +274,11 @@ public:
         ITC_mesg (type),
         _index (index)
     {
-	if (bits) memcpy (_bits, bits, 16 * sizeof (uint16_t));
-        else      memset (_bits, 0, 16 * sizeof (uint16_t)); 
+        if (bits) memcpy (_bits, bits, 16 * sizeof (uint16_t));
+        else      memset (_bits, 0, 16 * sizeof (uint16_t));
     }
 
-    int       _index;    
+    int       _index;
     uint16_t  _bits [16];
 };
 
@@ -293,14 +293,14 @@ public:
         _pres (pres),
         _stat (stat)
     {
-	if (bits) memcpy (_bits, bits, NGROUP * sizeof (uint32_t));
+        if (bits) memcpy (_bits, bits, NGROUP * sizeof (uint32_t));
         else      memset (_bits, 0, NGROUP * sizeof (uint32_t));
     }
 
     int       _bank;
     int       _pres;
     int       _stat;
-    uint32_t  _bits [NGROUP];  
+    uint32_t  _bits [NGROUP];
 };
 
 
@@ -335,4 +335,4 @@ public:
 
 
 #endif
- 
+

@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -36,8 +36,8 @@ Functionwin::Functionwin (X_window *parent, X_callback *callb, int xp, int yp,
     for (int i = 0; i < NFUNC; i++)
     {
         _sc [i] = 0;
-	_yc [i] = 0;
-	_st [i] = 0;
+        _yc [i] = 0;
+        _st [i] = 0;
     }
     _fc = 0;
     _ic = -1;
@@ -49,8 +49,8 @@ Functionwin::~Functionwin (void)
 {
     for (int i = 0; i < NFUNC; i++)
     {
-	delete[] _yc [i];
-	delete[] _st [i];
+        delete[] _yc [i];
+        delete[] _st [i];
     }
 }
 
@@ -61,22 +61,22 @@ void Functionwin::handle_event (XEvent *E)
     {
     case Expose:
         expose ((XExposeEvent *) E);
-        break;  
+        break;
 
     case ButtonPress:
         bpress ((XButtonEvent *) E);
-        break;  
+        break;
 
     case MotionNotify:
         motion ((XPointerMovedEvent *) E);
-        break;  
+        break;
 
     case ButtonRelease:
         brelse ((XButtonEvent *) E);
-        break;  
+        break;
 
    default:
-	printf ("Multilsider::event %d\n", E->type);
+        printf ("Multilsider::event %d\n", E->type);
     }
 }
 
@@ -111,7 +111,7 @@ void Functionwin::set_yparam (int k, X_scale_style *scale, unsigned long color)
 void Functionwin::show (void)
 {
     x_resize (_xs, _ys);
-    x_map ();   
+    x_map ();
 }
 
 
@@ -119,8 +119,8 @@ void Functionwin::reset (int k)
 {
     for (int i = 0; i < _n; i++)
     {
-	_yc [k][i] = _ymax;
-        _st [k][i] = 0;  
+        _yc [k][i] = _ymax;
+        _st [k][i] = 0;
     }
 }
 
@@ -129,7 +129,7 @@ void Functionwin::set_point (int k, int i, float v)
 {
     if (_sc [k])
     {
-	_st [k][i] = 1;
+        _st [k][i] = 1;
         _yc [k][i] = _ys - 1 - _sc [k]->calcpix (v);
     }
 }
@@ -140,7 +140,7 @@ void Functionwin::upd_point (int k, int i, float v)
     if (_sc [k])
     {
         plot_line (k);
-	_st [k][i] = 1;
+        _st [k][i] = 1;
         _yc [k][i] = _ys - 1 - _sc [k]->calcpix (v);
         plot_line (k);
     }
@@ -152,7 +152,7 @@ void Functionwin::clr_point (int k, int i)
     if (_sc [k])
     {
         plot_line (k);
-	_st [k][i] = 0;
+        _st [k][i] = 0;
         plot_line (k);
     }
 }
@@ -165,7 +165,7 @@ void Functionwin::set_mark (int i)
        plot_mark ();
        _im = i;
        plot_mark ();
-    }        
+    }
 }
 
 
@@ -194,33 +194,33 @@ void Functionwin::bpress (XButtonEvent *E)
     y = E->y;
     i = (x + _dx / 2) / _dx;
     if ((i < 0) || (i >= _n)) return;
-    if (abs (x - i * _dx) > 8) return;   
+    if (abs (x - i * _dx) > 8) return;
 
     yc = _yc [_fc];
     st = _st [_fc];
 
     if (E->state & ControlMask)
     {
-	if (st [i])
-	{
+        if (st [i])
+        {
             for (j = n = 0; j < _n; j++) if (st [j]) n++;
-	    if ((n > 1) && (abs (y - yc [i]) <= 8))
-	    {
+            if ((n > 1) && (abs (y - yc [i]) <= 8))
+            {
                 plot_line (_fc);
                 st [i] = 0;
                 plot_line (_fc);
                 if (_callb)
-		{
+                {
                     _ic = i;
                     _vc = _sc [_fc]->calcval (_ys - 1 - y);
                     _callb->handle_callb (CB_FW_SEL, this, 0);
                     _callb->handle_callb (CB_FW_UND, this, 0);
                     _ic = -1;
-		}                
-	    }
-	}
+                }
+            }
+        }
         else
-	{
+        {
            plot_line (_fc);
            if (y > _ymax) y = _ymax;
            if (y < _ymin) y = _ymin;
@@ -228,26 +228,26 @@ void Functionwin::bpress (XButtonEvent *E)
            st [i] = 1;
            plot_line (_fc);
            if (_callb)
-	   {
+           {
                _ic = i;
                _vc = _sc [_fc]->calcval (_ys - 1 - y);
                _callb->handle_callb (CB_FW_SEL, this, 0);
                _callb->handle_callb (CB_FW_DEF, this, 0);
-	   }
-	}
+           }
+        }
     }
     else
     {
-	for (j = 0; j < NFUNC; j++)
-	{
-	    if (_sc [j] && _st [j][i] && (abs (_yc [j][i] - y) <= 8))
+        for (j = 0; j < NFUNC; j++)
+        {
+            if (_sc [j] && _st [j][i] && (abs (_yc [j][i] - y) <= 8))
             {
-		_fc = j;
-                _ic = i;     
+                _fc = j;
+                _ic = i;
                 if (_callb) _callb->handle_callb (CB_FW_SEL, this, 0);
-                break;                
-	    }
-	}
+                break;
+            }
+        }
     }
 }
 
@@ -279,14 +279,14 @@ void Functionwin::plot_grid (void)
 
     for (i = 0; i <= _sc [0]->nseg; i++)
     {
-	D.move (0, _ys - _sc [0]->pix [i] - 1);
+        D.move (0, _ys - _sc [0]->pix [i] - 1);
         D.rdraw (_xs, 0);
     }
     x = _x0;
     for (i = 0; i <= 10; i++)
     {
         D.move (x, 0);
-        D.rdraw (0, _ys); 
+        D.rdraw (0, _ys);
         x += _dx;
     }
 
@@ -313,7 +313,7 @@ void Functionwin::plot_mark (void)
 
 void Functionwin::plot_line (int k)
 {
-    int    i0, i1, x0, x1; 
+    int    i0, i1, x0, x1;
     int   *yc;
     char  *st;
     X_draw D (dpy (), win (), dgc (), 0);
@@ -329,15 +329,15 @@ void Functionwin::plot_line (int k)
     for (i1 = 1; i1 < _n; i1++)
     {
         x1 += _dx;
-	if (st [i1])
-	{
-	    if (st [i0]) D.move (x0, yc [i0]);
-    	    else         D.move (x0, yc [i1]);
+        if (st [i1])
+        {
+            if (st [i0]) D.move (x0, yc [i0]);
+                else         D.move (x0, yc [i1]);
             D.draw (x1, yc [i1]);
             D.drawrect (x1 - 4, yc [i1] - 4, x1 + 4, yc [i1] + 4);
             x0 = x1;
             i0 = i1;
-	}    
+        }
     }
     if (x1 != x0)
     {
@@ -356,7 +356,7 @@ void Functionwin::move_point (int y)
     plot_line (_fc);
     if (_callb)
     {
-	_vc = _sc [_fc]->calcval (_ys - 1 - y);
+        _vc = _sc [_fc]->calcval (_ys - 1 - y);
         _callb->handle_callb (CB_FW_UPD, this, 0);
     }
 }
@@ -368,33 +368,33 @@ void Functionwin::move_curve (int y)
     int  *yc = _yc [_fc];
     char *st = _st [_fc];
 
-    plot_line (_fc); 
+    plot_line (_fc);
     if (y > _ymax) y = _ymax;
     if (y < _ymin) y = _ymin;
     dy = y - yc [_ic];
     for (j = 0; j < _n; j++)
     {
         if (st [j])
-	{
-   	    y = yc [j] + dy;
+        {
+               y = yc [j] + dy;
             if (y > _ymax) y = _ymax;
             if (y < _ymin) y = _ymin;
             yc [j] = y;
-	}
+        }
     }
-    plot_line (_fc); 
+    plot_line (_fc);
     if (_callb)
     {
         i = _ic;
         for (j = 0; j < _n; j++)
         {
-	    if (st [j])
+            if (st [j])
             {
-		 _ic = j;
-		 _vc = _sc [_fc]->calcval (_ys - 1 - yc [j]);
-		 _callb->handle_callb (CB_FW_UPD, this, 0);
-	    }
-	}
+                 _ic = j;
+                 _vc = _sc [_fc]->calcval (_ys - 1 - yc [j]);
+                 _callb->handle_callb (CB_FW_UPD, this, 0);
+            }
+        }
         _ic = i;
     }
 }

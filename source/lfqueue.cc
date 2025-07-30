@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -31,7 +31,7 @@ Lfq_u8::Lfq_u8 (int size) : _size (size), _mask (_size - 1), _nwr (0), _nrd (0)
 Lfq_u8::~Lfq_u8 (void)
 {
     delete[] _data;
-} 
+}
 
 
 Lfq_u16::Lfq_u16 (int size) : _size (size), _mask (_size - 1), _nwr (0), _nrd (0)
@@ -43,7 +43,7 @@ Lfq_u16::Lfq_u16 (int size) : _size (size), _mask (_size - 1), _nwr (0), _nrd (0
 Lfq_u16::~Lfq_u16 (void)
 {
     delete[] _data;
-} 
+}
 
 
 Lfq_u32::Lfq_u32 (int size) : _size (size), _mask (_size - 1), _nwr (0), _nrd (0)
@@ -55,6 +55,6 @@ Lfq_u32::Lfq_u32 (int size) : _size (size), _mask (_size - 1), _nwr (0), _nrd (0
 Lfq_u32::~Lfq_u32 (void)
 {
     delete[] _data;
-} 
+}
 
 

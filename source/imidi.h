@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -57,8 +57,8 @@ private:
     void proc_midi (void);
     void proc_mesg (ITC_mesg *M);
 
-    Lfq_u32        *_qnote; 
-    Lfq_u8         *_qmidi; 
+    Lfq_u32        *_qnote;
+    Lfq_u8         *_qmidi;
     uint16_t       *_midimap;
     const char     *_appname;
 #ifdef __linux__

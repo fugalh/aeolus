@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -33,7 +33,7 @@ H_scale::H_scale (X_window *parent, X_callback *callb, int xp, int yp) :
     X_window (parent, xp, yp, 778, 18, Colors.main_bg),
     _callb (callb)
 {
-    x_add_events (ExposureMask | ButtonPressMask); 
+    x_add_events (ExposureMask | ButtonPressMask);
     x_map ();
 }
 
@@ -49,15 +49,15 @@ void H_scale::handle_event (XEvent *E)
     case Expose:
         X = (XExposeEvent *) E;
         if (X->count == 0) redraw ();
-        break;  
+        break;
 
     case ButtonPress:
         B = (XButtonEvent *) E;
-        x = B->x - 5; 
-        _i = x / 12;       
-        x -= 12 * _i + 6; 
+        x = B->x - 5;
+        _i = x / 12;
+        x -= 12 * _i + 6;
         if (_callb && (abs (x) < 6)) _callb->handle_callb (CB_SC_HARM, this, E);
-        break;  
+        break;
     }
 }
 
@@ -66,16 +66,16 @@ void H_scale::redraw (void)
 {
     X_draw D (dpy (), win (), dgc (), xft ());
     int    i;
-    char   s [4]; 
+    char   s [4];
 
     D.setcolor (XftColors.main_fg);
     D.setfont (XftFonts.scales);
     for (i = 0; i < 64; i++)
     {
-	D.move (11 + i * 12, 12);
-	sprintf (s, "%d", i + 1);
-	D.drawstring (s, 0);
-	if (i > 8) i++;
+        D.move (11 + i * 12, 12);
+        sprintf (s, "%d", i + 1);
+        D.drawstring (s, 0);
+        if (i > 8) i++;
     }
 }
 
@@ -84,7 +84,7 @@ void H_scale::redraw (void)
 N_scale::N_scale (X_window *parent, X_callback *callb, int xp, int yp) :
     X_window (parent, xp, yp, 778, 18, Colors.main_bg), _callb (callb)
 {
-    x_add_events (ExposureMask | ButtonPressMask); 
+    x_add_events (ExposureMask | ButtonPressMask);
     x_map ();
 }
 
@@ -100,15 +100,15 @@ void N_scale::handle_event (XEvent *E)
     case Expose:
         X = (XExposeEvent *) E;
         if (X->count == 0) redraw ();
-        break;  
+        break;
 
     case ButtonPress:
         B = (XButtonEvent *) E;
-        x = B->x + 8; 
-        _i = x / FW_DX;       
-        x -= _i * FW_DX + FW_DX / 2; 
+        x = B->x + 8;
+        _i = x / FW_DX;
+        x -= _i * FW_DX + FW_DX / 2;
         if (_callb && (abs (x) < 10)) _callb->handle_callb (CB_SC_NOTE, this, E);
-        break;  
+        break;
     }
 }
 
@@ -117,22 +117,22 @@ void N_scale::redraw (void)
 {
     X_draw D (dpy (), win (), dgc (), xft ());
     int    i;
-    char   s [4]; 
+    char   s [4];
 
     D.setcolor (XftColors.main_fg);
     D.setfont (XftFonts.scales);
     for (i = 0; i <= 10 ; i++)
     {
-	sprintf (s, "%d", 36 + 6 * i);
-	D.move (FW_X0 + i * FW_DX, 12);
-	D.drawstring (s, 0);
+        sprintf (s, "%d", 36 + 6 * i);
+        D.move (FW_X0 + i * FW_DX, 12);
+        D.drawstring (s, 0);
     }
 }
 
 
 
 
-const char *Editwin::_pftb_text [N_PFTB] = 
+const char *Editwin::_pftb_text [N_PFTB] =
 {
     "32", "16", "10 2/3", "8", "5 1/3", "4", "2 2/3", "2", "1 3/5", "1 1/3", "1"
 };
@@ -158,7 +158,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     _xs = 841;
     _ys = 700;
     H.position (xp, yp);
-    x_apply (&H); 
+    x_apply (&H);
 
     _lock = 0;
     but1.size.x = 150;
@@ -167,7 +167,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     _tabb [1] = new X_tbutton (this, this, &but1, 150, 0, "Harmonics - Levels",   0, TAB_LEV);
     _tabb [2] = new X_tbutton (this, this, &but1, 300, 0, "Harmonics - Attack",   0, TAB_ATT);
     _tabb [3] = new X_tbutton (this, this, &but1, 450, 0, "Harmonics - Random",   0, TAB_RAN);
-    for (i = 0; i < 4; i++) _tabb [i]->x_map ();     
+    for (i = 0; i < 4; i++) _tabb [i]->x_map ();
     but1.size.x = 80;
     _appl = new X_tbutton (this, this, &but1, 600, 0, "Apply", 0, B_APPL);
     _appl->x_map ();
@@ -209,10 +209,10 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     y += 40;
     x = 28;
     but1.size.x = 60;
-    for (i = 0; i < N_PFTB; i++)     
+    for (i = 0; i < N_PFTB; i++)
     {
         _pftb [i] = new X_tbutton (W, this, &but1, x, y, _pftb_text [i], 0, B_PFTB + i);
-	_pftb [i]->x_map ();
+        _pftb [i]->x_map ();
         x += 60;
     }
     _pedal = new X_tbutton (W, this, &but1, x + 20, y, "Pedal", 0, B_PEDAL);
@@ -246,7 +246,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     (new X_vscale (W, &sca_Tu2, x + 28 + _tun_fun->xs (), y + 20, 28))->x_map ();
 
     x = 0;
-    y += 45 + _tun_fun->ys (); 
+    y += 45 + _tun_fun->ys ();
     add_text (W,  28 + x, y, 150, 20, "Attack time (ms)",  &text1);
     add_text (W, 240 + x, y, 150, 20, "Attack detune (c)", &text2);
     _atu_fun = new Functionwin (W, this, x + 28, y + 20, Colors.func_bg, Colors.func_gr, Colors.func_mk);
@@ -272,7 +272,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     (new X_vscale (W, &sca_Tatt, x, y + 20, 28))->x_map ();
     (new X_vscale (W, &sca_Tu3,  x + 28 + _dtu_fun->xs (), y + 20, 28))->x_map ();
 
-    y += 45 + _dtu_fun->ys (); 
+    y += 45 + _dtu_fun->ys ();
     _tabh [0] = y + 20;
 
 
@@ -280,7 +280,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     y = 15;
     _lev_msl = new Multislider (W, this, 28, y, Colors.func_gr, Colors.func_mk);
     _lev_msl->set_xparam (64, 5, 12, 7);
-    _lev_msl->set_yparam (&sca_dBlg, 0);     
+    _lev_msl->set_yparam (&sca_dBlg, 0);
     _lev_msl->set_colors (XftColors.func_d0->pixel, XftColors.func_d1->pixel);
     _lev_msl->show ();
     _lev_hsc = new H_scale (W, this, 28, y + 306);
@@ -298,12 +298,12 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     y += 335;
     _tabh [1] = y + 20;
 
-        
+
     _tabw [2] = W = new X_window (this, 0, 20, _xs, _ys, Colors.main_bg);
     y = 15;
     _att_msl = new Multislider (W, this, 28, y, Colors.func_gr, Colors.func_mk);
     _att_msl->set_xparam (64, 5, 12, 7);
-    _att_msl->set_yparam (&sca_Tatt, 0);     
+    _att_msl->set_yparam (&sca_Tatt, 0);
     _att_msl->set_colors (XftColors.func_d0->pixel, XftColors.func_d1->pixel);
     _att_msl->show ();
     _att_hsc = new H_scale (W, this, 28, y + 201);
@@ -312,7 +312,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     y += 230;
     _atp_msl = new Multislider (W, this, 28, y, Colors.func_gr, Colors.func_mk);
     _atp_msl->set_xparam (64, 5, 12, 7);
-    _atp_msl->set_yparam (&sca_Patt, 1);     
+    _atp_msl->set_yparam (&sca_Patt, 1);
     _atp_msl->set_colors (XftColors.func_d0->pixel, XftColors.func_d2->pixel);
     _atp_msl->show ();
     _atp_hsc = new H_scale (W, this, 28, y + 201);
@@ -338,7 +338,7 @@ Editwin::Editwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman 
     y = 15;
     _ran_msl = new Multislider (W, this, 28, y, Colors.func_gr, Colors.func_mk);
     _ran_msl->set_xparam (64, 5, 12, 7);
-    _ran_msl->set_yparam (&sca_0_12, 0);     
+    _ran_msl->set_yparam (&sca_0_12, 0);
     _ran_msl->set_colors (XftColors.func_d0->pixel, XftColors.func_d1->pixel);
     _ran_msl->show ();
     _ran_hsc = new H_scale (W, this, 28, y + 201);
@@ -406,36 +406,36 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
             XButtonEvent *Z = (XButtonEvent *) E;
 
             switch  (B->cbid ())
-	    {
-	    case TAB_GEN:
-	    case TAB_LEV:
-	    case TAB_ATT:
-	    case TAB_RAN:
-	        set_tab (B->cbid () - TAB_GEN);
-                break; 
+            {
+            case TAB_GEN:
+            case TAB_LEV:
+            case TAB_ATT:
+            case TAB_RAN:
+                set_tab (B->cbid () - TAB_GEN);
+                break;
 
             case B_PEDAL:
                 _save->set_stat (1);
                 _appl->set_stat (1);
-                if (_pedal->stat ()) { _pedal->set_stat (0); _edit->_n1 = 96; } 
-                else                 { _pedal->set_stat (1); _edit->_n1 = 67; } 
+                if (_pedal->stat ()) { _pedal->set_stat (0); _edit->_n1 = 96; }
+                else                 { _pedal->set_stat (1); _edit->_n1 = 67; }
                 break;
 
-	    case B_PFTB:
-	    case B_PFTB+1:
-	    case B_PFTB+2:
-	    case B_PFTB+3:
-	    case B_PFTB+4:
-	    case B_PFTB+5:
-	    case B_PFTB+6:
-	    case B_PFTB+7:
-	    case B_PFTB+8:
-	    case B_PFTB+9:
-	    case B_PFTB+10:
-	        set_pft (B->cbid () - B_PFTB);
+            case B_PFTB:
+            case B_PFTB+1:
+            case B_PFTB+2:
+            case B_PFTB+3:
+            case B_PFTB+4:
+            case B_PFTB+5:
+            case B_PFTB+6:
+            case B_PFTB+7:
+            case B_PFTB+8:
+            case B_PFTB+9:
+            case B_PFTB+10:
+                set_pft (B->cbid () - B_PFTB);
                 _save->set_stat (1);
                 _appl->set_stat (1);
-                break; 
+                break;
 
             case B_APPL:
                 strcpy (_edit->_stopname, _name->text ());
@@ -444,7 +444,7 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
 
             case B_MOFF:
                 _callb->handle_callb (CB_GLOB_MOFF, this, 0);
-		break;
+                break;
 
             case B_SAVE:
                 save (_sdir);
@@ -457,11 +457,11 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
 
             case B_LNEW:
                 if (Z->state & ShiftMask)
-		{
+                {
                     _save->set_stat (0);
                     _edit->reset ();
                     init (_edit);
-		}
+                }
                 break;
             }
             break;
@@ -478,16 +478,16 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
            _save->set_stat (1);
            break;
 
-        case CB_SC_HARM: 
-        case CB_MS_SEL: 
-	{
+        case CB_SC_HARM:
+        case CB_MS_SEL:
+        {
             int h;
 
             if (k == CB_SC_HARM) h = ((H_scale *) W)->get_ind ();
-   	    else                 h = ((Multislider *) W)->get_ind ();
+               else                 h = ((Multislider *) W)->get_ind ();
 
             switch (_ctab)
-	    {
+            {
             case TAB_LEV:
                  set_harm (&_edit->_h_lev, _lev_msl, _lev_fun, 0, _lev_harm = h);
                  break;
@@ -498,19 +498,19 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
             case TAB_RAN:
                  set_harm (&_edit->_h_ran, _ran_msl, _ran_fun, 0, _ran_harm = h);
                  break;
-	    }              
+            }
             break;
-	}  
-        case CB_SC_NOTE: 
+        }
+        case CB_SC_NOTE:
         case CB_FW_SEL:
-	{
+        {
             int n;
-            
+
             if (k == CB_SC_NOTE) n = ((N_scale *) W)->get_ind ();
             else                 n = ((Functionwin *) W)->get_ind ();
 
             switch (_ctab)
-	    {
+            {
             case TAB_LEV:
                  set_note (&_edit->_h_lev, _lev_msl, _lev_fun, _lev_note = n);
                  break;
@@ -521,32 +521,32 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
             case TAB_RAN:
                  set_note (&_edit->_h_ran, _ran_msl, _ran_fun, _ran_note = n);
                  break;
-	    }              
+            }
             break;
-	}  
+        }
         case CB_MS_UPD:
         case CB_MS_UND:
-	{
+        {
             Multislider *M = (Multislider *) W;
             int d = (k != CB_MS_UND);
 
             switch (_ctab)
-	    {
+            {
             case TAB_LEV:
-		msl_update (&_edit->_h_lev, _lev_msl, _lev_fun, 0, d, _lev_harm, _lev_note);
+                msl_update (&_edit->_h_lev, _lev_msl, _lev_fun, 0, d, _lev_harm, _lev_note);
                 break;
             case TAB_ATT:
-		if (M == _att_msl) msl_update (&_edit->_h_att, _att_msl, _att_fun, 0, d, _att_harm, _att_note);
-		else               msl_update (&_edit->_h_atp, _atp_msl, _att_fun, 1, d, _att_harm, _att_note);
+                if (M == _att_msl) msl_update (&_edit->_h_att, _att_msl, _att_fun, 0, d, _att_harm, _att_note);
+                else               msl_update (&_edit->_h_atp, _atp_msl, _att_fun, 1, d, _att_harm, _att_note);
                 break;
             case TAB_RAN:
-		msl_update (&_edit->_h_ran, _ran_msl, _ran_fun, 0, d, _ran_harm, _ran_note);
+                msl_update (&_edit->_h_ran, _ran_msl, _ran_fun, 0, d, _ran_harm, _ran_note);
                 break;
-	    }              
+            }
             _save->set_stat (1);
             _appl->set_stat (1);
             break;
-	}
+        }
         case CB_FW_UPD:
         case CB_FW_DEF:
         case CB_FW_UND:
@@ -556,44 +556,44 @@ void Editwin::handle_callb (int k, X_window *W, XEvent *E )
             int d = (k != CB_FW_UND);
 
             switch (_ctab)
-	    {
+            {
             case TAB_GEN:
                 if (F == _vol_fun)
-		{
-		    if (f) fun_update (&_edit->_n_ins, F, d);
-		    else   fun_update (&_edit->_n_vol, F, d);
-		}
+                {
+                    if (f) fun_update (&_edit->_n_ins, F, d);
+                    else   fun_update (&_edit->_n_vol, F, d);
+                }
                 else if (F == _tun_fun)
-		{
-		    if (f) fun_update (&_edit->_n_ran, F, d); 
-		    else   fun_update (&_edit->_n_off, F, d); 
-		}
+                {
+                    if (f) fun_update (&_edit->_n_ran, F, d);
+                    else   fun_update (&_edit->_n_off, F, d);
+                }
                 else if (F == _atu_fun)
-		{
-		    if (f) fun_update (&_edit->_n_atd, F, d); 
-		    else   fun_update (&_edit->_n_att, F, d); 
-		}
+                {
+                    if (f) fun_update (&_edit->_n_atd, F, d);
+                    else   fun_update (&_edit->_n_att, F, d);
+                }
                 else if (F == _dtu_fun)
-		{
-		    if (f) fun_update (&_edit->_n_dcd, F, d); 
-		    else   fun_update (&_edit->_n_dct, F, d); 
-		}
+                {
+                    if (f) fun_update (&_edit->_n_dcd, F, d);
+                    else   fun_update (&_edit->_n_dct, F, d);
+                }
                 break;
             case TAB_LEV:
-		fun_update (&_edit->_h_lev, _lev_msl, _lev_fun, d, _lev_harm, _lev_note);
+                fun_update (&_edit->_h_lev, _lev_msl, _lev_fun, d, _lev_harm, _lev_note);
                 break;
             case TAB_ATT:
-		if (f) fun_update (&_edit->_h_atp, _atp_msl, _att_fun, d, _att_harm, _att_note);
+                if (f) fun_update (&_edit->_h_atp, _atp_msl, _att_fun, d, _att_harm, _att_note);
                 else   fun_update (&_edit->_h_att, _att_msl, _att_fun, d, _att_harm, _att_note);
                 break;
             case TAB_RAN:
-		fun_update (&_edit->_h_ran, _ran_msl, _ran_fun, d, _ran_harm, _ran_note);
+                fun_update (&_edit->_h_ran, _ran_msl, _ran_fun, d, _ran_harm, _ran_note);
                 break;
-	    }              
+            }
             _save->set_stat (1);
             _appl->set_stat (1);
             break;
-	}
+        }
     }
 }
 
@@ -626,16 +626,16 @@ void Editwin::msl_update (HN_func *D, Multislider *M, Functionwin *F, int k, int
 {
     int   i = M->get_ind ();
     float v = M->get_val ();
-   
+
     if (d) D->setv (i, n, v);
-    else   D->clrv (i, n);  
+    else   D->clrv (i, n);
     M->set_val (i, D->st (i, n), D->vs (i, n));
     if (i == h)
     {
-	if (D->st (i, n)) F->upd_point (k, n, v);
-	else              F->clr_point (k, n);
+        if (D->st (i, n)) F->upd_point (k, n, v);
+        else              F->clr_point (k, n);
     }
-}    
+}
 
 
 void Editwin::fun_update (HN_func *D, Multislider *M, Functionwin *F, int d, int h, int n)
@@ -644,7 +644,7 @@ void Editwin::fun_update (HN_func *D, Multislider *M, Functionwin *F, int d, int
     float v = F->get_val ();
 
     if (d) D->setv (h, i, v);
-    else   D->clrv (h, i);  
+    else   D->clrv (h, i);
     if (i == n) M->set_val (h, d, D->vs (h, n));
 }
 
@@ -655,7 +655,7 @@ void Editwin::fun_update (N_func *D, Functionwin *F, int d)
     float v = F->get_val ();
 
     if (d) D->setv (i, v);
-    else   D->clrv (i);  
+    else   D->clrv (i);
 }
 
 
@@ -679,11 +679,11 @@ void Editwin::init (Addsynth *synth)
 
     for (i = 0; i < N_PFTB; i++)
     {
-	if (_edit->_fn == _fn [i] && _edit->_fd == _fd [i])
-	{
-	    set_pft (i);
+        if (_edit->_fn == _fn [i] && _edit->_fd == _fd [i])
+        {
+            set_pft (i);
             break;
-	}
+        }
     }
     if (i == N_PFTB) set_pft (3);
 
@@ -717,7 +717,7 @@ void Editwin::load (const char *sdir)
 {
     _save->set_stat (0);
     _load->set_stat (1);
-    XFlush (dpy ());  
+    XFlush (dpy ());
     strcpy (_edit->_filename, _file->text ());
     _edit->load (sdir);
     init (_edit);
@@ -734,7 +734,7 @@ void Editwin::load (const char *sdir)
 void Editwin::save (const char *sdir)
 {
     _save->set_stat (1);
-    XFlush (dpy ());  
+    XFlush (dpy ());
     strcpy (_edit->_filename, _file->text ());
     strcpy (_edit->_stopname, _name->text ());
     strcpy (_edit->_mnemonic, _mnem->text ());
@@ -784,7 +784,7 @@ void Editwin::set_pft (int pft)
     if (_cpft >= 0) _pftb [_cpft]->set_stat (0);
     _cpft = pft;
     _pftb [pft]->set_stat (1);
-    _edit->_fn = _fn [pft]; 
-    _edit->_fd = _fd [pft]; 
+    _edit->_fn = _fn [pft];
+    _edit->_fd = _fd [pft];
 }
 

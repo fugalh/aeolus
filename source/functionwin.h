@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -29,10 +29,10 @@ class Functionwin : public X_window
 {
 public:
 
-    Functionwin (X_window *parent, X_callback *callb, int xp, int yp, 
+    Functionwin (X_window *parent, X_callback *callb, int xp, int yp,
                  unsigned long bgnd, unsigned long grid, unsigned long mark);
     ~Functionwin (void);
- 
+
     void set_xparam (int n, int x0, int dx);
     void set_yparam (int k, X_scale_style *scale, unsigned long color);
     void show (void);
@@ -43,7 +43,7 @@ public:
     void clr_point (int k, int i);
     int   get_ind (void) const { return _ic; }
     int   get_fun (void) const { return _fc; }
-    float get_val (void) const { return _vc; }   
+    float get_val (void) const { return _vc; }
     void set_mark (int i);
     void redraw (void);
 
@@ -68,7 +68,7 @@ private:
     void find_sect (int *);
     void move_sect (int *);
 
-    X_callback     *_callb; 
+    X_callback     *_callb;
     unsigned long   _bgnd;
     unsigned long   _grid;
     unsigned long   _mark;

@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -54,7 +54,7 @@ public:
     int  relpri (void) const { return _relpri; }
 
 private:
-   
+
     enum { VOLUME, REVSIZE, REVTIME, STPOSIT };
 
     void init_audio (void);
@@ -85,31 +85,31 @@ private:
 
     void cond_key_off (int m, int b)
     {
-	int       i;
-	uint16_t  *p;
+        int       i;
+        uint16_t  *p;
 
-	for (i = 0, p = _keymap; i < NNOTES; i++, p++)
-	{
+        for (i = 0, p = _keymap; i < NNOTES; i++, p++)
+        {
             if (*p & m)
-	    {
+            {
                 *p &= ~b;
-		*p |= KMAP_SET;
-	    }
-	}
+                *p |= KMAP_SET;
+            }
+        }
     }
 
     void cond_key_on (int m, int b)
     {
-	int       i;
-	uint16_t  *p;
+        int       i;
+        uint16_t  *p;
 
-	for (i = 0, p = _keymap; i < NNOTES; i++, p++)
-	{
+        for (i = 0, p = _keymap; i < NNOTES; i++, p++)
+        {
             if (*p & m)
-	    {
+            {
                 *p |= b | KMAP_SET;
-	    }
-	}
+            }
+        }
     }
 
     static void jack_static_shutdown (void *);
@@ -117,8 +117,8 @@ private:
 
     const char     *_appname;
     uint16_t        _midimap [16];
-    Lfq_u32        *_qnote; 
-    Lfq_u32        *_qcomm; 
+    Lfq_u32        *_qnote;
+    Lfq_u32        *_qcomm;
     Lfq_u8         *_qmidi;
     volatile bool   _running;
 #ifdef __linux__

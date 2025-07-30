@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -81,14 +81,14 @@ public:
     void hide (void) { x_unmap (); }
     void sdir (const char *sdir) { _sdir = sdir; }
     void wdir (const char *wdir) { _wdir = wdir; }
- 
+
 private:
 
     enum {
-	    TAB_GEN, TAB_LEV, TAB_ATT, TAB_RAN,
+            TAB_GEN, TAB_LEV, TAB_ATT, TAB_RAN,
             B_APPL, B_MOFF, B_SAVE, B_LOAD, B_LNEW, B_PEDAL, B_PFTB, N_PFTB = 11
          };
- 
+
     virtual void handle_event (XEvent *xe);
     virtual void handle_callb (int, X_window*, _XEvent*);
 
@@ -110,7 +110,7 @@ private:
     X_resman   *_xresm;
     int         _xs;
     int         _ys;
-    int         _lock;    
+    int         _lock;
     const char *_sdir;
     const char *_wdir;
     Addsynth   *_edit;
@@ -131,42 +131,42 @@ private:
     X_button   *_load;
     X_button   *_lnew;
     X_button   *_pedal;
-    X_button   *_pftb [N_PFTB];    
+    X_button   *_pftb [N_PFTB];
     int         _cpft;
 
     Functionwin *_vol_fun;
-    N_scale     *_vol_nsc; 
+    N_scale     *_vol_nsc;
     Functionwin *_tun_fun;
-    N_scale     *_tun_nsc; 
+    N_scale     *_tun_nsc;
     Functionwin *_atu_fun;
-    N_scale     *_atu_nsc; 
+    N_scale     *_atu_nsc;
     Functionwin *_dtu_fun;
-    N_scale     *_dtu_nsc; 
+    N_scale     *_dtu_nsc;
 
     Multislider *_lev_msl;
-    H_scale     *_lev_hsc; 
+    H_scale     *_lev_hsc;
     Functionwin *_lev_fun;
-    N_scale     *_lev_nsc; 
+    N_scale     *_lev_nsc;
     int          _lev_harm;
     int          _lev_note;
 
     Multislider *_att_msl;
-    H_scale     *_att_hsc; 
+    H_scale     *_att_hsc;
     Multislider *_atp_msl;
-    H_scale     *_atp_hsc; 
+    H_scale     *_atp_hsc;
     Functionwin *_att_fun;
-    N_scale     *_att_nsc; 
+    N_scale     *_att_nsc;
     int          _att_harm;
     int          _att_note;
 
     Multislider *_ran_msl;
-    H_scale     *_ran_hsc; 
+    H_scale     *_ran_hsc;
     Functionwin *_ran_fun;
-    N_scale     *_ran_nsc; 
+    N_scale     *_ran_nsc;
     int          _ran_harm;
     int          _ran_note;
 
-    static const char  *_pftb_text [N_PFTB]; 
+    static const char  *_pftb_text [N_PFTB];
     static const char   _fn [N_PFTB];
     static const char   _fd [N_PFTB];
 };

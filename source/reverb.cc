@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -45,26 +45,26 @@ void Delelm::fini (void)
 void Delelm::set_t60mf (float tmf)
 {
     _gmf = powf (0.001f, _size / tmf);
-} 
+}
 
- 
+
 void Delelm::set_t60lo (float tlo, float wlo)
 {
     _glo = powf (0.001f, _size / tlo) / _gmf - 1.0f;
-    _wlo = wlo;    
+    _wlo = wlo;
 }
 
- 
+
 void Delelm::set_t60hi (float thi, float chi)
 {
     float g, t;
 
     g = powf (0.001f, _size / thi) / _gmf;
     t = (1 - g * g) / (2 * g * g * chi);
-    _whi = (sqrt (1 + 4 * t) - 1) / (2 * t); 
-} 
+    _whi = (sqrt (1 + 4 * t) - 1) / (2 * t);
+}
 
- 
+
 float Delelm::process (float x)
 {
     float t;
@@ -83,12 +83,12 @@ float Delelm::process (float x)
 void Delelm::print (void)
 {
     printf ("%5d %6.3lf   %5.3lf %5.3lf   %6.4lf %6.4lf\n",
-            _size, _fb, _glo, _gmf, _wlo, _whi); 
+            _size, _fb, _glo, _gmf, _wlo, _whi);
 }
 
 
-int Reverb::_sizes [16] = 
-{ 
+int Reverb::_sizes [16] =
+{
      839,  6732 -  839,
     1181,  7339 - 1181,
     1229,  8009 - 1229,
@@ -100,8 +100,8 @@ int Reverb::_sizes [16] =
 };
 
 
-float Reverb::_feedb [16] = 
-{  
+float Reverb::_feedb [16] =
+{
    -0.6f,  0.1f,
     0.6f,  0.1f,
     0.6f,  0.1f,
@@ -122,7 +122,7 @@ void Reverb::init (float rate)
     _line = new float [_size];
     memset (_line, 0, _size * sizeof (float));
     _i = 0;
-    m = (rate < 64e3) ? 1 : 2;    
+    m = (rate < 64e3) ? 1 : 2;
     for (int i = 0; i < 16; i++) _delm [i].init (m * _sizes [i], _feedb [i]);
     _x0 = _x1 = _x2 = _x3 = _x4 = _x5 = _x6 = _x7 = _z = 0;
     set_delay (0.05);
@@ -189,7 +189,7 @@ void Reverb::print (void)
 
 
 void Reverb::process (int n, float gain, float *R, float *W, float *X, float *Y, float *Z)
-{	
+{
     int   i, j;
     float t, g, x;
 
@@ -197,7 +197,7 @@ void Reverb::process (int n, float gain, float *R, float *W, float *X, float *Y,
     gain *= _gain;
 
     i = _i;
-    while (n--)   
+    while (n--)
     {
         j = i - _idel;
         if (j < 0) j += _size;
@@ -206,14 +206,14 @@ void Reverb::process (int n, float gain, float *R, float *W, float *X, float *Y,
         _line [i] = _z;
         if (++i == _size) i = 0;
 
-        _x0 = _delm  [0].process (g * _x0 + x); 
-        _x1 = _delm  [2].process (g * _x1 + x); 
-        _x2 = _delm  [4].process (g * _x2 + x); 
-        _x3 = _delm  [6].process (g * _x3 + x); 
-        _x4 = _delm  [8].process (g * _x4 + x); 
-        _x5 = _delm [10].process (g * _x5 + x); 
-        _x6 = _delm [12].process (g * _x6 + x); 
-        _x7 = _delm [14].process (g * _x7 + x); 
+        _x0 = _delm  [0].process (g * _x0 + x);
+        _x1 = _delm  [2].process (g * _x1 + x);
+        _x2 = _delm  [4].process (g * _x2 + x);
+        _x3 = _delm  [6].process (g * _x3 + x);
+        _x4 = _delm  [8].process (g * _x4 + x);
+        _x5 = _delm [10].process (g * _x5 + x);
+        _x6 = _delm [12].process (g * _x6 + x);
+        _x7 = _delm [14].process (g * _x7 + x);
 
         t = _x0 - _x1; _x0 += _x1;  _x1 = t;
         t = _x2 - _x3; _x2 += _x3;  _x3 = t;
@@ -230,19 +230,19 @@ void Reverb::process (int n, float gain, float *R, float *W, float *X, float *Y,
         t = _x2 - _x6; _x2 += _x6;  _x6 = t;
         t = _x3 - _x7; _x3 += _x7;  _x7 = t;
 
-        *W++ += 1.25f * gain * _x0; 
+        *W++ += 1.25f * gain * _x0;
         *X++ += gain * (_x1 - 0.05f * _x2);
         *Y++ += gain * _x2;
         *Z++ += gain * _x4;
 
         _x0 = _delm  [1].process (_x0);
-        _x1 = _delm  [3].process (_x1); 
-        _x2 = _delm  [5].process (_x2); 
-        _x3 = _delm  [7].process (_x3); 
-        _x4 = _delm  [9].process (_x4); 
-        _x5 = _delm [11].process (_x5); 
-        _x6 = _delm [13].process (_x6); 
-        _x7 = _delm [15].process (_x7); 
+        _x1 = _delm  [3].process (_x1);
+        _x2 = _delm  [5].process (_x2);
+        _x3 = _delm  [7].process (_x3);
+        _x4 = _delm  [9].process (_x4);
+        _x5 = _delm [11].process (_x5);
+        _x6 = _delm [13].process (_x6);
+        _x7 = _delm [15].process (_x7);
     }
     _i = i;
 }

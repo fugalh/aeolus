@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -36,7 +36,7 @@ Division::Division (Asection *asect, float fsam) :
     _s (0.0f),
     _m (0.0f)
 {
-    for (int i = 0; i < NRANKS; i++) _ranks [i] = 0;    
+    for (int i = 0; i < NRANKS; i++) _ranks [i] = 0;
 }
 
 
@@ -45,11 +45,11 @@ Division::~Division (void)
 }
 
 
-void Division::process (void) 
+void Division::process (void)
 {
     int    i;
     float  d, g, t;
-    float  *p, *q; 
+    float  *p, *q;
 
     memset (_buff, 0, NCHANN * PERIOD * sizeof (float));
     for (i = 0; i < _nrank; i++) _ranks [i]->play (1);
@@ -57,17 +57,17 @@ void Division::process (void)
     g = _swel;
     if (_trem)
     {
-	_s += _w * _c;
-	_c -= _w * _s;
+        _s += _w * _c;
+        _c -= _w * _s;
         t = sqrtf (_c * _c + _s * _s);
         _c /= t;
         _s /= t;
         if ((_trem == 2) && (fabsf (_s) < 0.05f))
         {
-	    _trem = 0;
+            _trem = 0;
             _c = 1;
             _s = 0;
-	}
+        }
         g *= 1.0f + _m * _s;
     }
 
@@ -76,11 +76,11 @@ void Division::process (void)
     t = 0.95f * _gain;
     if (g < t) g = t;
 
-    d = (g - _gain) / PERIOD;    
+    d = (g - _gain) / PERIOD;
     g = _gain;
     p = _buff;
     q = _asect->get_wptr ();
-    
+
     for (i = 0; i < PERIOD; i++)
     {
         g += d;
@@ -104,8 +104,8 @@ void Division::set_rank (int ind, Rankwave *W, int pan, int del)
     C = _ranks [ind];
     if (C)
     {
-	W->_nmask = C->_nmask | KMAP_SET;
-	delete C;
+        W->_nmask = C->_nmask | KMAP_SET;
+        delete C;
     }
     else W->_nmask = KMAP_SET;
     _ranks [ind] = W;
@@ -125,12 +125,12 @@ void Division::update (int note, int16_t mask)
 
     for (r = 0; r < _nrank; r++)
     {
-	W = _ranks [r];
+        W = _ranks [r];
         if (W->_nmask & KMAP_ALL)
-	{     
-	    if (mask & W->_nmask) W->note_on (note + 36);
-	    else                  W->note_off (note + 36);
-	}
+        {
+            if (mask & W->_nmask) W->note_on (note + 36);
+            else                  W->note_off (note + 36);
+        }
     }
 }
 
@@ -143,26 +143,26 @@ void Division::update (uint16_t *keys)
 
     for (r = 0; r < _nrank; r++)
     {
-	W = _ranks [r];
+        W = _ranks [r];
         if (W->_nmask & KMAP_SET)
-	{
+        {
             W->_nmask ^= KMAP_SET;
-            m = W->_nmask & KMAP_ALL;               
+            m = W->_nmask & KMAP_ALL;
             if (m)
-	    {            
-		n0 = W->n0 ();
-		n1 = W->n1 ();
+            {
+                n0 = W->n0 ();
+                n1 = W->n1 ();
                 k = keys;
                 d = n0 - 36;
                 if (d > 0) k += d;
                 for (n = n0; n <= n1; n++)
-	        {
+                {
                     if (*k++ & m) W->note_on (n);
-		    else          W->note_off (n);
-		}
-	    }
+                    else          W->note_off (n);
+                }
+            }
             else W->all_off ();
-	}
+        }
     }
 }
 
@@ -178,7 +178,7 @@ void Division::set_div_mask (int bit)
     _dmask |= b;
     for (r = 0; r < _nrank; r++)
     {
-	W = _ranks [r];
+        W = _ranks [r];
         if (W->_nmask & d)
         {
             W->_nmask |= b;
@@ -199,13 +199,13 @@ void Division::clr_div_mask (int bit)
     _dmask &= ~b;
     for (r = 0; r < _nrank; r++)
     {
-	W = _ranks [r];
+        W = _ranks [r];
         if (W->_nmask & d)
         {
             W->_nmask &= ~b;
             W->_nmask |= KMAP_SET;
         }
-    } 
+    }
 }
 
 

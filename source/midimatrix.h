@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -32,7 +32,7 @@ public:
 
     Midimatrix (X_window *parent, X_callback *callb, int xp, int yp);
     ~Midimatrix (void);
- 
+
     virtual void handle_event (XEvent *xe);
 
     void init (M_ifc_init *M);
@@ -44,7 +44,7 @@ public:
 private:
 
     enum { XL = 180, XR = 5, YT = 5, YB = 22, DX = 22, DY = 22 };
-    
+
     void expose (XExposeEvent *E);
     void redraw (void);
     void plot_grid (void);

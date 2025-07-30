@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -61,8 +61,8 @@ private:
         TEMP_DEC, TEMP_INC, FREQ_DEC, FREQ_INC, TUNE_EXE, TUNE_CAN,
         NDIVIS = 8, DIVIS_BIT0 = 8, DIVIS_STEP = (1 << DIVIS_BIT0), DIVIS_MASK = (DIVIS_STEP - 1),
         NTEMPE = 16
-    }; 
-           
+    };
+
 
     virtual void handle_event (XEvent *);
     virtual void handle_callb (int, X_window *, XEvent *);

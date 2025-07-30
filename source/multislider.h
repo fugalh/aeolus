@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -31,7 +31,7 @@ public:
 
     Multislider (X_window *parent, X_callback *callb, int xp, int yp, unsigned long grid, unsigned long mark);
     ~Multislider (void);
- 
+
     virtual void handle_event (XEvent *xe);
 
     void set_xparam (int n, int x0, int dx, int wx);
@@ -43,7 +43,7 @@ public:
     void set_col (int i, int c);
     int   get_ind (void) { return _ind; }
     int   get_col (void) { return _col; }
-    float get_val (void) { return _val; }   
+    float get_val (void) { return _val; }
     void set_mark (int i);
 
 private:
@@ -80,7 +80,7 @@ private:
     int            *_yc;
     char           *_st;
     int             _move;
-    int             _draw; 
+    int             _draw;
     int             _im;
     int             _ind;
     int             _col;

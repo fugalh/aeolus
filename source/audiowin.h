@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -54,7 +54,7 @@ private:
 
     enum { XOFFS = 90, XSTEP = 215, YSIZE = 330 };
     enum { NASECT = 4, ASECT_BIT0 = 8, ASECT_STEP = (1 << ASECT_BIT0), ASECT_MASK = (ASECT_STEP - 1) };
-           
+
     virtual void handle_event (XEvent *);
     virtual void handle_callb (int, X_window *, XEvent *);
 

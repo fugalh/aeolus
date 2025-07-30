@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -35,15 +35,15 @@ private:
 
     Pipewave (void) :
         _p0 (0), _p1 (0), _p2 (0), _l1 (0),
-        _k_s (0),  _k_r (0), 
+        _k_s (0),  _k_r (0),
         _m_r (0), _d_r (0), _d_a (0), _d_w (0),
-	_link (0), _sbit (0), _sdel (0), 
+        _link (0), _sbit (0), _sdel (0),
         _p_p (0), _y_p (0), _z_p (0), _p_r (0), _y_r (0), _g_r (0), _i_r (0)
-    {}     
+    {}
 
     ~Pipewave (void) { delete[] _p0; }
 
-    friend class Rankwave;   
+    friend class Rankwave;
 
     void genwave (Addsynth *D, int n, float fsamp, float fpipe);
     void save (FILE *F);
@@ -66,15 +66,15 @@ private:
     float      _d_w;   // instability bandwidth
 
     Pipewave  *_link;  // link to next in active chain
-    uint32_t   _sbit;  // on state bit  
+    uint32_t   _sbit;  // on state bit
     uint32_t   _sdel;  // delayed state
     float     *_out;   // audio output buffer
-    float     *_p_p;   // play pointer   
-    float      _y_p;   // play interpolation            
+    float     *_p_p;   // play pointer
+    float      _y_p;   // play interpolation
     float      _z_p;   // play interpolation speed
     float     *_p_r;   // release pointer
     float      _y_r;   // release interpolation
-    float      _g_r;   // release gain  
+    float      _g_r;   // release gain
     int16_t    _i_r;   // release count
 
 
@@ -82,7 +82,7 @@ private:
 
     static   Rngen   _rgen;
     static   float  *_arg;
-    static   float  *_att; 
+    static   float  *_att;
 };
 
 
@@ -97,13 +97,13 @@ public:
     {
         if ((n < _n0) || (n > _n1)) return;
         Pipewave *P = _pipes + (n - _n0);
-        P->_sbit = _sbit;   
+        P->_sbit = _sbit;
         if (! (P->_sdel || P->_p_p || P->_p_r))
         {
-	    P->_sdel |= _sbit;
+            P->_sdel |= _sbit;
             P->_link = _list;
             _list = P;
-	}
+        }
     }
 
     void note_off (int n)
@@ -111,14 +111,14 @@ public:
         if ((n < _n0) || (n > _n1)) return;
         Pipewave *P = _pipes + (n - _n0);
         P->_sdel >>= 4;
-        P->_sbit = 0;     
+        P->_sbit = 0;
     }
 
     void all_off (void)
     {
         Pipewave *P;
         for (P = _list; P; P = P->_link) P->_sbit = 0;
-    }        
+    }
 
     int  n0 (void) const { return _n0; }
     int  n1 (void) const { return _n1; }

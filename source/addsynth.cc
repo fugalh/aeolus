@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -49,7 +49,7 @@ void N_func::setv (int i, float v)
 
     if ((i < 0) || (i > M)) return;
     _v [i] = v;
-    _b |= 1 << i;   
+    _b |= 1 << i;
 
     for (j = i - 1; (j >= 0) && ! (_b & (1 << j)); j--);
     if (j < 0) while (++j != i) _v [j] = v;
@@ -71,7 +71,7 @@ void N_func::setv (int i, float v)
 
 void N_func::clrv (int i)
 {
-    int   j, k, m; 
+    int   j, k, m;
     float d;
 
     if ((i < 0) || (i > M)) return;
@@ -90,12 +90,12 @@ void N_func::clrv (int i)
     else if (j >= 0)
     {
         d = _v [j];
-        while (j < M) _v [++j] = d; 
+        while (j < M) _v [++j] = d;
     }
     else if (k <= M)
     {
         d = _v [k];
-        while (k > 0) _v [--k] = d; 
+        while (k > 0) _v [--k] = d;
     }
 }
 
@@ -113,7 +113,7 @@ void N_func::write (FILE *F)
     int  i;
     char d [N_NOTE * sizeof (float)];
 
-    swap4 (d, (char *)(&_b));    
+    swap4 (d, (char *)(&_b));
     fwrite (d, 1, sizeof (int32_t), F);
     for (i = 0; i < N_NOTE; i++) swap4 (d + i * sizeof (float), (char *)(_v + i));
     fwrite (d, N_NOTE, sizeof (float), F);
@@ -142,7 +142,7 @@ void N_func::read (FILE *F)
     char d [sizeof (int) + N_NOTE * sizeof (float)];
 
     fread (d, 1, sizeof (int32_t), F);
-    swap4 ((char *)(&_b), d);    
+    swap4 ((char *)(&_b), d);
     fread (d, N_NOTE, sizeof (float), F);
     for (i = 0; i < N_NOTE; i++) swap4 ((char *)(_v + i), d + i * sizeof (float));
 
@@ -205,8 +205,8 @@ void Addsynth::reset (void)
     *_comments = 0;
     _fd = 1;
     _fn = 1;
-    _n0 = NOTE_MIN; 
-    _n1 = NOTE_MAX; 
+    _n0 = NOTE_MIN;
+    _n1 = NOTE_MAX;
     _n_vol.reset (-20.0f);
     _n_ins.reset (0.0f);
     _n_off.reset (0.0f);
@@ -231,7 +231,7 @@ int Addsynth::save (const char *sdir)
     strcpy (path, sdir);
     strcat (path, "/");
     strcat (path, _filename);
-    
+
     if (! (F = fopen (path, "w")))
     {
         fprintf (stderr, "Can't open '%s' for writing\n", path);
@@ -246,7 +246,7 @@ int Addsynth::save (const char *sdir)
     d [29] = _n1;
     d [30] = _fn;
     d [31] = _fd;
-   
+
     fwrite (d, 1, 32, F);
     fwrite (_stopname, 1, 32, F);
     fwrite (_copyrite, 1, 56, F);
@@ -262,11 +262,11 @@ int Addsynth::save (const char *sdir)
     _n_atd.write (F);
     _n_dct.write (F);
     _n_dcd.write (F);
-    _h_lev.write (F, N_HARM);    
-    _h_ran.write (F, N_HARM);    
-    _h_att.write (F, N_HARM);    
-    _h_atp.write (F, N_HARM);    
-    
+    _h_lev.write (F, N_HARM);
+    _h_ran.write (F, N_HARM);
+    _h_att.write (F, N_HARM);
+    _h_atp.write (F, N_HARM);
+
     fclose (F);
     return 0;
 }
@@ -276,14 +276,14 @@ int Addsynth::load (const char *sdir)
 {
     FILE  *F;
     char   d [32];
-    char   path [1024];    
+    char   path [1024];
     int    v, k;
 
     strcpy (path, sdir);
     strcat (path, "/");
     strcat (path, _filename);
 
-    reset (); 
+    reset ();
 
     if (! (F = fopen (path, "r")))
     {
@@ -295,12 +295,12 @@ int Addsynth::load (const char *sdir)
     if (strcmp (d, "AEOLUS"))
     {
         fprintf (stderr, "File '%s' is not an Aeolus file\n", _filename);
-        fclose (F); 
+        fclose (F);
         return 1;
     }
     v = d [7];
     k = d [26];
-    if (! k) k = 48; 
+    if (! k) k = 48;
     _n0 = d [28];
     _n1 = d [29];
     if (_n1 == 0x2E) _n1 = 96;   ////// FIX THIS
@@ -323,15 +323,15 @@ int Addsynth::load (const char *sdir)
         _n_atd.read (F);
         _n_dct.read (F);
         _n_dcd.read (F);
-    } 
+    }
     _h_lev.reset (-100.0f);
     _h_ran.reset (0.0f);
     _h_att.reset (0.050f);
     _h_atp.reset (0.0f);
-    _h_lev.read (F, k);    
-    _h_ran.read (F, k);    
-    _h_att.read (F, k);    
-    _h_atp.read (F, k);    
+    _h_lev.read (F, k);
+    _h_ran.read (F, k);
+    _h_att.read (F, k);
+    _h_atp.read (F, k);
 
     fclose (F);
     return 0;

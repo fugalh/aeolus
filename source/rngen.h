@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2010 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2 of the License, or
@@ -20,7 +20,7 @@
 
 
 #ifndef __RNGEN_H
-#define	__RNGEN_H
+#define        __RNGEN_H
 
 
 #include "prbsgen.h"
@@ -36,12 +36,12 @@ public:
 
     uint32_t irand (void)
     {
-	uint32_t r;
+        uint32_t r;
 
-	if (++_i == 55) _i = 0;
-	if (_i < 24) r = _a [_i] += _a [_i + 31];
-	else         r = _a [_i] += _a [_i - 24];
-	return r;
+        if (++_i == 55) _i = 0;
+        if (_i < 24) r = _a [_i] += _a [_i + 31];
+        else         r = _a [_i] += _a [_i - 24];
+        return r;
     }
 
     double  urand (void) { return irand () / _p32; }
@@ -56,7 +56,7 @@ public:
     Rngen& operator=(const Rngen&); // disabled, not to be used
 
 private:
-  
+
     uint32_t  _a [55];
     int       _i;
     bool      _md;

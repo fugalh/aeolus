@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -65,18 +65,18 @@ void Midiwin::handle_callb (int k, X_window *W, XEvent *E)
     {
     case BUTTON | X_button::PRESS:
     {
-	X_button      *B = (X_button *) W;
+        X_button      *B = (X_button *) W;
         XButtonEvent  *X = (XButtonEvent *) E;
 
         set_butt (B->cbid ());
         if (X->state & ShiftMask) _callb->handle_callb (CB_MIDI_SETCONF, this, 0);
         else                      _callb->handle_callb (CB_MIDI_GETCONF, this, 0);
-	break;
+        break;
     }
     case CB_MIDI_MODCONF:
         set_butt (-1);
         _callb->handle_callb (CB_MIDI_SETCONF, this, 0);
-	break;
+        break;
     }
 }
 
@@ -87,7 +87,7 @@ void Midiwin::setup (M_ifc_init *M)
     int     i, x, y;
     char    s [256];
 
-    _matrix = new Midimatrix (this, this, 10, 10); 
+    _matrix = new Midimatrix (this, this, 10, 10);
     _matrix->init (M);
 
     x = 10;
@@ -98,10 +98,10 @@ void Midiwin::setup (M_ifc_init *M)
     for (i = 0; i < 8; i++)
     {
         sprintf (s, "%d", i + 1);
-	_bpres [i] = new X_tbutton (this, this, &but1, x, y, s, 0, i);        
-	_bpres [i]->x_map ();
+        _bpres [i] = new X_tbutton (this, this, &but1, x, y, s, 0, i);
+        _bpres [i]->x_map ();
         x += 32;
-    } 
+    }
 
     x += 10;
     add_text (x, y, 200, 20, "Shift-click to store preset", &text0, -1);
@@ -112,7 +112,7 @@ void Midiwin::setup (M_ifc_init *M)
     H.maxsize (_xs, _ys);
     H.rname (_xresm->rname ());
     H.rclas (_xresm->rclas ());
-    x_apply (&H); 
+    x_apply (&H);
     x_resize (_xs, _ys);
 
     sprintf (s, "%s   Aeolus-%s   Midi settings", M->_appid, VERSION);
@@ -127,8 +127,8 @@ void Midiwin::setconf (M_ifc_chconf *M)
     k = M->_index;
     if (k >= 0)
     {
-	if (k >= 8) k = -1;
-        set_butt (k);  
+        if (k >= 8) k = -1;
+        set_butt (k);
     }
     _matrix->set_chconf (M->_bits);
 }

@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -42,7 +42,7 @@ float scale_pythagorean [12] =
 
 // 1/4 comma meantone (Pietro Aaron, 1523)
 
-float scale_meanquart [12] = 
+float scale_meanquart [12] =
 {
     1.0000000,
     1.0449067,
@@ -61,7 +61,7 @@ float scale_meanquart [12] =
 
 // Andreas Werckmeister III, 1681
 
-float scale_werckm3 [12] = 
+float scale_werckm3 [12] =
 {
     1.00000000,
     1.05349794,
@@ -80,7 +80,7 @@ float scale_werckm3 [12] =
 
 // Kirnberger III
 
-float scale_kirnberg3 [12] = 
+float scale_kirnberg3 [12] =
 {
     1.00000000,
     1.05349794,

@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -51,36 +51,36 @@ public:
 private:
 
     virtual void handle_event (XEvent *);
-    
+
     void expose (XExposeEvent *);
 };
 
 
 
-class Mainwin : public X_window, public X_callback 
+class Mainwin : public X_window, public X_callback
 {
 public:
 
     Mainwin (X_window *parent, X_callback *callb, int xp, int yp, X_resman *xresm);
     ~Mainwin (void);
 
-    void handle_time (void);    
-    void setup (M_ifc_init *); 
+    void handle_time (void);
+    void setup (M_ifc_init *);
     void set_ifelm (M_ifc_ifelm *M);
     void set_state (M_ifc_preset *M);
     void set_ready (void);
     void set_label (int group, int ifelm, const char *label);
     ITC_mesg *mesg (void) const { return _mesg; }
- 
+
 private:
 
     enum
     {
-	B_DECB, B_INCB, B_DECM, B_INCM,
+        B_DECB, B_INCB, B_DECM, B_INCM,
         B_MRCL, B_PREV, B_NEXT, B_MSTO, B_MINS, B_MDEL, B_CANC,
         GROUP_BIT0 = 8, GROUP_STEP = (1 << GROUP_BIT0), GROUP_MASK = (GROUP_STEP - 1),
-    }; 
-           
+    };
+
     virtual void handle_event (XEvent *);
     virtual void handle_callb (int, X_window *, XEvent *);
 
@@ -94,7 +94,7 @@ private:
     Atom            _atom;
     X_callback     *_callb;
     X_resman       *_xresm;
-    Splashwin      *_splash; 
+    Splashwin      *_splash;
     ITC_mesg       *_mesg;
     int             _xsize;
     int             _ysize;
@@ -121,20 +121,20 @@ private:
     X_textip       *_t_bank;
     X_textip       *_t_pres;
     X_textip       *_t_comm;
-    X_button       *_b_mrcl;   
+    X_button       *_b_mrcl;
     X_button       *_b_next;
     X_button       *_b_prev;
     X_button       *_b_svpr;
-    X_button       *_b_msto;   
-    X_button       *_b_mins;   
-    X_button       *_b_mdel;   
-    X_button       *_b_canc;   
+    X_button       *_b_msto;
+    X_button       *_b_mins;
+    X_button       *_b_mdel;
+    X_button       *_b_canc;
 
     X_button       *_b_save;
     X_button       *_b_moff;
-    X_button       *_b_insw;   
-    X_button       *_b_audw;   
-    X_button       *_b_midw;   
+    X_button       *_b_insw;
+    X_button       *_b_audw;
+    X_button       *_b_midw;
 };
 
 

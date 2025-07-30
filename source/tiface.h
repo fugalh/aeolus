@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -40,7 +40,7 @@ private:
 };
 
 
-           
+
 class Tiface : public Iface
 {
 public:
@@ -50,7 +50,7 @@ public:
     virtual void stop (void);
 
 private:
-           
+
     virtual void thr_main (void);
 
     void handle_mesg (ITC_mesg *);
@@ -77,7 +77,7 @@ private:
     int  find_group (const char *);
     int  find_ifelm (const char *, int);
     int  comm1 (const char *);
-    
+
     Reader          _reader;
     bool            _stop;
     bool            _init;

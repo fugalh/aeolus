@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -43,7 +43,7 @@
 #include "lfqueue.h"
 
 
-enum // GLOBAL LIMITS 
+enum // GLOBAL LIMITS
 {
     NASECT = 4,
     NDIVIS = 8,
@@ -78,7 +78,7 @@ enum // GLOBAL LIMITS
 #define MIDICTL_ANOFF 123
 
 
-#define KMAP_ALL  0x0FFF 
+#define KMAP_ALL  0x0FFF
 #define KMAP_SET  0x8000  // Set if mask or keymap entry is modified.
 
 

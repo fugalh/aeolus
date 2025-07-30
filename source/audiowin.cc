@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -64,18 +64,18 @@ void Audiowin::handle_callb (int k, X_window *W, XEvent *E)
 
     switch (k)
     {
-        case SLIDER | X_slider::MOVE: 
-        case SLIDER | X_slider::STOP: 
+        case SLIDER | X_slider::MOVE:
+        case SLIDER | X_slider::STOP:
         {
             X_slider *X = (X_slider *) W;
             c = X->cbid ();
             _asect = (c >> ASECT_BIT0) - 1;
             _parid = c & ASECT_MASK;
-            _value = X->get_val (); 
+            _value = X->get_val ();
             _final = k == (X_callback::SLIDER | X_slider::STOP);
             _callb->handle_callb (CB_AUDIO_ACT, this, E);
-            break; 
-	}
+            break;
+        }
     }
 }
 
@@ -84,15 +84,15 @@ void Audiowin::setup (M_ifc_init *M)
 {
     int      i, j, k, x;
     char     s [256];
-    Asect    *S; 
+    Asect    *S;
     X_hints  H;
-    
+
     but1.size.x = 20;
     but1.size.y = 20;
     _nasect = M->_nasect;
     for (i = 0; i < _nasect; i++)
     {
-	S = _asectd + i;
+        S = _asectd + i;
         x = XOFFS + XSTEP * i;
         k = ASECT_STEP * (i + 1);
 
@@ -107,14 +107,14 @@ void Audiowin::setup (M_ifc_init *M)
         (new X_hscale (this, &sca_dBsh, x, 168, 10))->x_map ();
         S->_label [0] = 0;
         for (j = 0; j <  M->_ndivis; j++)
-	{
-	    if (M->_divisd [j]._asect == i)
-	    {
-		if (S->_label [0]) strcat (S->_label, " + ");
+        {
+            if (M->_divisd [j]._asect == i)
+            {
+                if (S->_label [0]) strcat (S->_label, " + ");
                 strcat (S->_label, M->_divisd [j]._label);
                 add_text (x, 5, 200, 20, S->_label, &text0);
-	    } 
-	}
+            }
+        }
     }
     add_text ( 10,  40, 60, 20, "Azimuth", &text0);
     add_text ( 10,  75, 60, 20, "Width",   &text0);
@@ -144,7 +144,7 @@ void Audiowin::setup (M_ifc_init *M)
     H.maxsize (XOFFS + _nasect * XSTEP, YSIZE);
     H.rname (_xresm->rname ());
     H.rclas (_xresm->rclas ());
-    x_apply (&H); 
+    x_apply (&H);
     x_resize (XOFFS + _nasect * XSTEP, YSIZE);
 }
 
@@ -154,16 +154,16 @@ void Audiowin::set_aupar (M_ifc_aupar *M)
     if (M->_asect < 0)
     {
         if ((M->_parid >= 0) && (M->_parid < 4))
-	{
-	    _slid [M->_parid]->set_val (M->_value);
-	}
+        {
+            _slid [M->_parid]->set_val (M->_value);
+        }
     }
     else if (M->_asect < _nasect)
     {
         if ((M->_parid >= 0) && (M->_parid < 5))
-	{
-	    _asectd [M->_asect]._slid [M->_parid]->set_val (M->_value);
-	}
+        {
+            _asectd [M->_asect]._slid [M->_parid]->set_val (M->_value);
+        }
     }
 }
 

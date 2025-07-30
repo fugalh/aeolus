@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -27,7 +27,7 @@ class Delelm
 private:
 
     friend class Reverb;
-    
+
     void init (int size, float fb);
     void fini (void);
     void set_t60mf (float tmf);
@@ -45,7 +45,7 @@ private:
     float      _wlo;
     float      _whi;
     float      _slo;
-    float      _shi;    
+    float      _shi;
 };
 
 
@@ -53,7 +53,7 @@ private:
 class Reverb
 {
 public:
-    
+
     void init (float rate);
     void fini (void);
     void process (int n, float gain, float *R, float *W, float *X, float *Y, float *Z);
@@ -82,7 +82,7 @@ private:
     float   _z;
 
     static int   _sizes [16];
-    static float _feedb [16]; 
+    static float _feedb [16];
 };
 
 

@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -84,12 +84,12 @@ struct xftcolors
 };
 
 
-struct fonts 
+struct fonts
 {
 };
 
 
-struct xftfonts 
+struct xftfonts
 {
     XftFont   *spla1;
     XftFont   *spla2;
@@ -111,7 +111,7 @@ extern X_scale_style    sca_azim, sca_difg, sca_size, sca_trev, sca_spos, sca_Tf
 extern X_button_style   ife0, ife1, ife2, ife3, but1, but2;
 extern X_menuwin_style  menu1;
 extern X_textln_style   text0, text1, text2, texti, textc;
-extern X_slider_style   sli1; 
+extern X_slider_style   sli1;
 
 extern void init_styles (X_display *disp, X_resman *xrm);
 

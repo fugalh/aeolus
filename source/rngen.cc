@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2010 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2 of the License, or
@@ -35,12 +35,12 @@ Rngen::Rngen (void)
     init (0);
 }
 
- 
+
 Rngen::~Rngen (void)
 {
 }
 
- 
+
 void Rngen::init (uint32_t s)
 {
     int i, j;
@@ -53,10 +53,10 @@ void Rngen::init (uint32_t s)
 
     for (i = 0; i < 55; i++)
     {
-	G.step ();
-	j = G.stat () & 4095;
-	while (j--) G.step ();
-	_a [i] = G.stat ();
+        G.step ();
+        j = G.stat () & 4095;
+        while (j--) G.step ();
+        _a [i] = G.stat ();
     }
 
     _i = 0;
@@ -64,22 +64,22 @@ void Rngen::init (uint32_t s)
     _mf = false;
 }
 
- 
+
 double Rngen::grand (void)
 {
     double a, b, r;
 
     if (_md)
     {
-	_md = false;
-	return _vd;
+        _md = false;
+        return _vd;
     }
 
     do
     {
-	a = irand () / _p31 - 1.0;
-	b = irand () / _p31 - 1.0;
-	r = a * a + b * b;
+        a = irand () / _p31 - 1.0;
+        b = irand () / _p31 - 1.0;
+        r = a * a + b * b;
     }
     while ((r > 1.0) || (r < 1e-20));
 
@@ -88,25 +88,25 @@ double Rngen::grand (void)
     _vd = r * b;
 
     return r * a;
-}    
+}
 
- 
+
 void Rngen::grand (double *x, double *y)
 {
     double a, b, r;
 
     do
     {
-	a = irand () / _p31 - 1.0;
-	b = irand () / _p31 - 1.0;
-	r = a * a + b * b;
+        a = irand () / _p31 - 1.0;
+        b = irand () / _p31 - 1.0;
+        r = a * a + b * b;
     }
     while ((r > 1.0) || (r < 1e-20));
 
     r = sqrt (-log (r) / r);
     *x = r * a;
     *y = r * b;
-}    
+}
 
 
 float Rngen::grandf (void)
@@ -115,15 +115,15 @@ float Rngen::grandf (void)
 
     if (_mf)
     {
-	_mf = false;
-	return _vf;
+        _mf = false;
+        return _vf;
     }
 
     do
     {
-	a = irand () / _p31f - 1.0f;
-	b = irand () / _p31f - 1.0f;
-	r = a * a + b * b;
+        a = irand () / _p31f - 1.0f;
+        b = irand () / _p31f - 1.0f;
+        r = a * a + b * b;
     }
     while ((r > 1.0f) || (r < 1e-20f));
 
@@ -132,22 +132,22 @@ float Rngen::grandf (void)
     _vf = r * b;
 
     return r * a;
-}    
+}
 
- 
+
 void Rngen::grandf (float *x, float *y)
 {
     float a, b, r;
 
     do
     {
-	a = irand () / _p31f - 1.0f;
-	b = irand () / _p31f - 1.0f;
-	r = a * a + b * b;
+        a = irand () / _p31f - 1.0f;
+        b = irand () / _p31f - 1.0f;
+        r = a * a + b * b;
     }
     while ((r > 1.0f) || (r < 1e-20f));
 
     r = sqrtf (-logf (r) / r);
     *x = r * a;
     *y = r * b;
-}    
+}

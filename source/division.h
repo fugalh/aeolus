@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -49,7 +49,7 @@ public:
     void update (uint16_t *keys);
 
 private:
-   
+
     Asection  *_asect;
     Rankwave  *_ranks [NRANKS];
     int        _nrank;
@@ -58,7 +58,7 @@ private:
     float      _fsam;
     float      _swel;
     float      _gain;
-    float      _w;    
+    float      _w;
     float      _c;
     float      _s;
     float      _m;

@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -30,7 +30,7 @@ X_scale_style     sca_dBsm, sca_dBsh, sca_dBlg, sca_Tatt, sca_Patt, sca_0_12, sc
 X_scale_style     sca_azim, sca_difg, sca_size, sca_trev, sca_spos, sca_Tfr, sca_Tmd, sca_Swl;
 X_button_style    ife0, ife1, ife2, ife3, but1, but2;
 X_textln_style    text0, text1, text2, texti, textc;
-X_slider_style    sli1; 
+X_slider_style    sli1;
 
 
 void init_styles (X_display *disp, X_resman *xrm)
@@ -88,7 +88,7 @@ void init_styles (X_display *disp, X_resman *xrm)
 
     XftFonts.spla1  = disp->alloc_xftfont (xrm->get (".font.spla1",  "serif:bold:pixelsize=20"));
     XftFonts.spla2  = disp->alloc_xftfont (xrm->get (".font.spla2",  "serif:bold:pixelsize=12"));
-    XftFonts.main   = disp->alloc_xftfont (xrm->get (".font.main",   "luxi:pixelsize=12"));  
+    XftFonts.main   = disp->alloc_xftfont (xrm->get (".font.main",   "luxi:pixelsize=12"));
     XftFonts.large  = disp->alloc_xftfont (xrm->get (".font.large",  "serif:bold:pixelsize=16"));
     XftFonts.stops  = disp->alloc_xftfont (xrm->get (".font.stops",  "serif:bold:pixelsize=13"));
     XftFonts.button = disp->alloc_xftfont (xrm->get (".font.button", "luxi:pixelsize=12"));
@@ -237,7 +237,7 @@ void init_styles (X_display *disp, X_resman *xrm)
     sca_size.set_tick ( 3, 118, 0.100, "100");
     sca_size.set_tick ( 4, 154, 0.125, 0    );
     sca_size.set_tick ( 5, 190, 0.150, "150");
- 
+
     sca_trev.bg = Colors.main_bg;
     sca_trev.fg = XftColors.main_fg;
     sca_trev.marg = 0;
@@ -428,5 +428,5 @@ void init_styles (X_display *disp, X_resman *xrm)
     sli1.knob = Colors.slid_kn;
     sli1.mark = Colors.slid_mk;
     sli1.h = 19;
-    sli1.w = 10; 
+    sli1.w = 10;
 }

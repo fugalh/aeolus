@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -30,13 +30,13 @@ class Lfq_u8
 public:
 
     Lfq_u8 (int size);
-    ~Lfq_u8 (void); 
+    ~Lfq_u8 (void);
 
-    int       write_avail (void) const { return _size - _nwr + _nrd; } 
+    int       write_avail (void) const { return _size - _nwr + _nrd; }
     void      write_commit (int n) { _nwr += n; }
     void      write (int i, uint8_t v) { _data [(_nwr + i) & _mask] = v; }
 
-    int       read_avail (void) const { return _nwr - _nrd; } 
+    int       read_avail (void) const { return _nwr - _nrd; }
     void      read_commit (int n) { _nrd += n; }
     uint8_t   read (int i) { return _data [(_nrd + i) & _mask]; }
 
@@ -55,13 +55,13 @@ class Lfq_u16
 public:
 
     Lfq_u16 (int size);
-    ~Lfq_u16 (void); 
+    ~Lfq_u16 (void);
 
-    int       write_avail (void) const { return _size - _nwr + _nrd; } 
+    int       write_avail (void) const { return _size - _nwr + _nrd; }
     void      write_commit (int n) { _nwr += n; }
     void      write (int i, uint16_t v) { _data [(_nwr + i) & _mask] = v; }
 
-    int       read_avail (void) const { return _nwr - _nrd; } 
+    int       read_avail (void) const { return _nwr - _nrd; }
     void      read_commit (int n) { _nrd += n; }
     uint16_t  read (int i) { return _data [(_nrd + i) & _mask]; }
 
@@ -80,13 +80,13 @@ class Lfq_u32
 public:
 
     Lfq_u32 (int size);
-    ~Lfq_u32 (void); 
+    ~Lfq_u32 (void);
 
-    int       write_avail (void) const { return _size - _nwr + _nrd; } 
+    int       write_avail (void) const { return _size - _nwr + _nrd; }
     void      write_commit (int n) { _nwr += n; }
     void      write (int i, uint32_t v) { _data [(_nwr + i) & _mask] = v; }
 
-    int       read_avail (void) const { return _nwr - _nrd; } 
+    int       read_avail (void) const { return _nwr - _nrd; }
     void      read_commit (int n) { _nrd += n; }
     uint32_t  read (int i) { return _data [(_nrd + i) & _mask]; }
 

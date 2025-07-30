@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -49,7 +49,7 @@ public:
     Rankwave   *_rwave;
 };
 
-    
+
 class Divis
 {
 public:
@@ -69,7 +69,7 @@ public:
     Rank        _ranks [NRANKS];
 };
 
-    
+
 class Keybd
 {
 public:
@@ -80,7 +80,7 @@ public:
     bool    _pedal;
 };
 
-    
+
 class Ifelm
 {
 public:
@@ -98,7 +98,7 @@ public:
     uint32_t  _action1;
 };
 
-    
+
 class Group
 {
 public:
@@ -109,7 +109,7 @@ public:
 
     char     _label [16];
     int      _nifelm;
-    Ifelm    _ifelms [NIFELM]; 
+    Ifelm    _ifelms [NIFELM];
 };
 
 
@@ -135,7 +135,7 @@ public:
     uint32_t  _bits [NGROUP];
 };
 
-    
+
 
 class Model : public A_thread
 {
@@ -143,7 +143,7 @@ public:
 
     Model (Lfq_u32      *qcomm,
            Lfq_u8       *qmidi,
-	   uint16_t     *midimap,
+           uint16_t     *midimap,
            const char   *appname,
            const char   *stops,
            const char   *instr,
@@ -151,7 +151,7 @@ public:
            bool          uhome);
 
     virtual ~Model (void);
-   
+
     void terminate (void) {  put_event (EV_EXIT, 1); }
 
 private:
@@ -187,8 +187,8 @@ private:
     int  read_presets (void);
     int  write_presets (void);
 
-    Lfq_u32        *_qcomm; 
-    Lfq_u8         *_qmidi; 
+    Lfq_u32        *_qcomm;
+    Lfq_u8         *_qmidi;
     uint16_t       *_midimap;
     const char     *_appname;
     const char     *_stopsdir;

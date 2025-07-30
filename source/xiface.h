@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 //
 //  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
-//    
+//
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 3 of the License, or
@@ -41,7 +41,7 @@ public:
 
 private:
 
-           
+
     enum { DIVBASE = 0x100, DIVSTEP = 0x100 };
     enum { VOLUM, RSIZE, RTIME, STPOS };
     enum { DIFG, DRYS, REFL, REVB, TRFR, TRMD, BACK = 0x80 };
