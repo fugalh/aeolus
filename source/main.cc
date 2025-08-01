@@ -27,11 +27,21 @@
 #include <signal.h>
 #include <clthreads.h>
 #include <dlfcn.h>
+#if defined(STATIC_UI) && defined(HAVE_TIFACE)
+#include "tiface.h"
+#endif
+#if defined(STATIC_UI) && defined(HAVE_XIFACE)
+#include "xiface.h"
+#endif
+#include "global.h"
 #include "audio.h"
+#ifdef __linux__
 #include "imidi.h"
+#endif
 #include "model.h"
 #include "slave.h"
 #include "iface.h"
+#include "messages.h"
 
 
 #ifdef __linux__
@@ -74,11 +84,13 @@ static void help (void)
     fprintf (stderr, "  -J                 Use JACK (default), with options:\n");
     fprintf (stderr, "    -s               Select JACK server\n");
     fprintf (stderr, "    -B               Ambisonics B format output\n");
+#ifdef __linux__
     fprintf (stderr, "  -A                 Use ALSA, with options:\n");
     fprintf (stderr, "    -d <device>        Alsa device [default]\n");
     fprintf (stderr, "    -r <rate>          Sample frequency [48000]\n");
     fprintf (stderr, "    -p <period>        Period size [1024]\n");
     fprintf (stderr, "    -n <nfrags>        Number of fragments [2]\n\n");
+#endif
     exit (1);
 }
 
@@ -171,7 +183,9 @@ int main (int ac, char *av [])
 {
     ITC_ctrl       itcc;
     Audio         *audio;
+#ifdef __linux__
     Imidi         *imidi;
+#endif
     Model         *model;
     Slave         *slave;
     void          *so_handle;
@@ -188,6 +202,27 @@ int main (int ac, char *av [])
 
     if (mlockall (MCL_CURRENT | MCL_FUTURE)) fprintf (stderr, "Warning: memory lock failed.\n");
 
+#ifdef STATIC_UI
+    if (t_opt)
+    {
+#ifdef HAVE_TIFACE
+        iface = new Tiface (ac, av);
+#else
+        fprintf (stderr, "Error: text interface not available in this build.\n");
+        return 1;
+#endif
+    }
+    else
+    {
+#ifdef HAVE_XIFACE
+        iface = new aeolus_x11::Xiface (ac, av);
+#else
+        fprintf (stderr, "Error: X11 interface not available in this build.\n");
+        return 1;
+#endif
+    }
+#else
+    // Dynamic loading for Makefile builds (Linux only)
     if (t_opt) sprintf (s, "%s/aeolus_txt.so", LIBDIR);
     else       sprintf (s, "%s/aeolus_x11.so", LIBDIR);
     so_handle = dlopen (s, RTLD_NOW);
@@ -203,6 +238,8 @@ int main (int ac, char *av [])
         dlclose (so_handle);
         return 1;
     }
+    iface = so_create (ac, av);
+#endif
 
     audio = new Audio (N_val, &note_queue, &comm_queue);
 #ifdef __linux__
@@ -212,16 +249,19 @@ int main (int ac, char *av [])
     audio->init_jack (s_val, B_opt, &midi_queue);
 #endif
     model = new Model (&comm_queue, &midi_queue, audio->midimap (), audio->appname (), S_val, I_val, W_val, u_opt);
+#ifdef __linux__
     imidi = new Imidi (&note_queue, &midi_queue, audio->midimap (), audio->appname ());
+#endif
     slave = new Slave ();
-    iface = so_create (ac, av);
 
     ITC_ctrl::connect (audio, EV_EXIT,  &itcc, EV_EXIT);
     ITC_ctrl::connect (audio, EV_QMIDI, model, EV_QMIDI);
     ITC_ctrl::connect (audio, TO_MODEL, model, FM_AUDIO);
+#ifdef __linux__
     ITC_ctrl::connect (imidi, EV_EXIT,  &itcc, EV_EXIT);
     ITC_ctrl::connect (imidi, EV_QMIDI, model, EV_QMIDI);
     ITC_ctrl::connect (imidi, TO_MODEL, model, FM_IMIDI);
+#endif
     ITC_ctrl::connect (model, EV_EXIT,  &itcc, EV_EXIT);
     ITC_ctrl::connect (model, TO_AUDIO, audio, FM_MODEL);
     ITC_ctrl::connect (model, TO_SLAVE, slave, FM_MODEL);
@@ -233,11 +273,13 @@ int main (int ac, char *av [])
     ITC_ctrl::connect (iface, TO_MODEL, model, FM_IFACE);
 
     audio->start ();
+#ifdef __linux__
     if (imidi->thr_start (SCHED_FIFO, audio->relpri () - 20, 0))
     {
         fprintf (stderr, "Warning: can't run midi thread in RT mode.\n");
         imidi->thr_start (SCHED_OTHER, 0, 0);
     }
+#endif
     if (model->thr_start (SCHED_FIFO, audio->relpri () - 30, 0))
     {
         fprintf (stderr, "Warning: can't run model thread in RT mode.\n");
@@ -247,14 +289,24 @@ int main (int ac, char *av [])
     iface->thr_start (SCHED_OTHER, 0, 0);
 
     signal (SIGINT, sigint_handler);
-    n = 4;
+#ifdef __linux__
+    n = 4;  // Linux: imidi, model, slave, iface threads
+#else
+    n = 3;  // macOS: model, slave, iface threads (no separate imidi thread)
+#endif
     while (n)
     {
         itcc.get_event (1 << EV_EXIT);
         {
+#ifdef __linux__
             if (n-- == 4)
+#else
+            if (n-- == 3)
+#endif
             {
+#ifdef __linux__
                 imidi->terminate ();
+#endif
                 model->terminate ();
                 slave->terminate ();
                 iface->terminate ();
@@ -263,12 +315,15 @@ int main (int ac, char *av [])
     }
 
     delete audio;
+#ifdef __linux__
     delete imidi;
+#endif
     delete model;
     delete slave;
     delete iface;
+#ifndef STATIC_UI
     dlclose (so_handle);
+#endif
 
     return 0;
 }
-

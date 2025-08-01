@@ -22,6 +22,8 @@
 #include "callbacks.h"
 #include "styles.h"
 
+using namespace aeolus_x11;
+
 
 Audiowin::Audiowin (X_window *parent, X_callback *callb, int xp, int yp, X_resman *xresm) :
     X_window (parent, xp, yp, 200, 100, Colors.main_bg),

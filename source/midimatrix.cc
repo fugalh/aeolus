@@ -23,6 +23,8 @@
 
 #include "midimatrix.h"
 #include "callbacks.h"
+
+using namespace aeolus_x11;
 #include "messages.h"
 #include "styles.h"
 

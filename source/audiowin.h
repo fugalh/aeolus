@@ -26,6 +26,8 @@
 #include "messages.h"
 
 
+namespace aeolus_x11 {
+
 class Asect
 {
 public:
@@ -74,6 +76,8 @@ private:
     float           _value;
     bool            _final;
 };
+
+} // namespace aeolus_x11
 
 
 #endif

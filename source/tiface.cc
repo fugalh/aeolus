@@ -27,10 +27,12 @@
 
 
 
+#ifndef STATIC_UI
 extern "C" Iface *create_iface (int ac, char *av [])
 {
     return new Tiface (ac, av);
 }
+#endif
 
 
 

@@ -26,6 +26,8 @@
 #include "messages.h"
 
 
+namespace aeolus_x11 {
+
 class Group
 {
 public:
@@ -136,6 +138,8 @@ private:
     X_button       *_b_audw;
     X_button       *_b_midw;
 };
+
+} // namespace aeolus_x11
 
 
 #endif

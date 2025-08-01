@@ -25,6 +25,8 @@
 #include <clxclient.h>
 
 
+namespace aeolus_x11 {
+
 class Functionwin : public X_window
 {
 public:
@@ -88,6 +90,8 @@ private:
     int             _im;
     float           _vc;
 };
+
+} // namespace aeolus_x11
 
 
 #endif

@@ -26,6 +26,8 @@
 #include "messages.h"
 
 
+namespace aeolus_x11 {
+
 class Midimatrix : public X_window
 {
 public:
@@ -61,6 +63,8 @@ private:
     uint16_t        _chconf [16];
     const char     *_labels [32];
 };
+
+} // namespace aeolus_x11
 
 
 #endif

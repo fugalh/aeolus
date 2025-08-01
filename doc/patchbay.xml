@@ -1,0 +1,31 @@
+<!DOCTYPE patchbay>
+<patchbay name="qjackctl-patchbay" version="1.0.4">
+ <output-sockets>
+  <socket client="aeolus" exclusive="off" name="aeolus" type="jack-audio">
+   <plug>out\.L</plug>
+   <plug>out\.R</plug>
+  </socket>
+  <socket client="system_midi" exclusive="off" name="system_midi" type="jack-midi">
+   <plug>capture_1</plug>
+   <plug>capture_2</plug>
+   <plug>capture_3</plug>
+  </socket>
+ </output-sockets>
+ <input-sockets>
+  <socket client="system" exclusive="off" name="system" type="jack-audio">
+   <plug>playback_1</plug>
+   <plug>playback_2</plug>
+   <plug>playback_3</plug>
+   <plug>playback_4</plug>
+  </socket>
+  <socket client="aeolus" exclusive="off" name="aeolus" type="jack-midi">
+   <plug>Midi\/in</plug>
+  </socket>
+ </input-sockets>
+ <slots/>
+ <cables>
+  <cable input="system" output="aeolus" type="jack-audio"/>
+  <cable input="aeolus" output="system_midi" type="jack-midi"/>
+ </cables>
+</patchbay>
+

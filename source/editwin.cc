@@ -24,6 +24,8 @@
 #include "styles.h"
 #include "callbacks.h"
 
+using namespace aeolus_x11;
+
 
 #define FW_X0 16
 #define FW_DX 32

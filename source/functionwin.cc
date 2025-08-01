@@ -24,6 +24,8 @@
 #include "callbacks.h"
 #include "styles.h"
 
+using namespace aeolus_x11;
+
 
 
 Functionwin::Functionwin (X_window *parent, X_callback *callb, int xp, int yp,

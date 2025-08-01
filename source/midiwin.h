@@ -27,6 +27,8 @@
 #include "messages.h"
 
 
+namespace aeolus_x11 {
+
 class Midiwin : public X_window, public X_callback
 {
 public:
@@ -60,6 +62,8 @@ private:
     Midimatrix     *_matrix;
     X_tbutton      *_bpres [8];
 };
+
+} // namespace aeolus_x11
 
 
 #endif

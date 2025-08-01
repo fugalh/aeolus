@@ -21,7 +21,15 @@
 #ifndef __GLOBAL_H
 #define __GLOBAL_H
 
+#ifdef __APPLE__
+#include <machine/endian.h>
+#include <libkern/OSByteOrder.h>
+#define __BYTE_ORDER    BYTE_ORDER
+#define __LITTLE_ENDIAN LITTLE_ENDIAN
+#define __BIG_ENDIAN    BIG_ENDIAN
+#else
 #include <endian.h>
+#endif
 #ifdef __BYTE_ORDER
 #if (__BYTE_ORDER == __LITTLE_ENDIAN)
 #define WR2(p,v) { (p)[0] = v; (p)[1] = v >> 8; }

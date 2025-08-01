@@ -26,6 +26,8 @@
 #include "messages.h"
 
 
+namespace aeolus_x11 {
+
 class Divis
 {
 public:
@@ -99,6 +101,8 @@ private:
     float           _freq, _freq1;
     int             _temp, _temp1;
 };
+
+} // namespace aeolus_x11
 
 
 #endif

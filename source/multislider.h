@@ -25,6 +25,8 @@
 #include <clxclient.h>
 
 
+namespace aeolus_x11 {
+
 class Multislider : public X_window
 {
 public:
@@ -86,6 +88,8 @@ private:
     int             _col;
     float           _val;
 };
+
+} // namespace aeolus_x11
 
 
 #endif

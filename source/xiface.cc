@@ -23,14 +23,18 @@
 #include <clthreads.h>
 #include "xiface.h"
 #include "styles.h"
+
+using namespace aeolus_x11;
 #include "callbacks.h"
 
 
 
+#ifndef STATIC_UI
 extern "C" Iface *create_iface (int ac, char *av [])
 {
-    return new Xiface (ac, av);
+    return new aeolus_x11::Xiface (ac, av);
 }
+#endif
 
 
 

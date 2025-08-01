@@ -1,0 +1,6 @@
+build
+source/*.d
+source/*.o
+.DS_Store
+CLAUDE.md
+AGENT.md

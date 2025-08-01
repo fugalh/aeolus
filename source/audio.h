@@ -46,6 +46,7 @@ public:
 #endif
     void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
     void  start (void);
+    void  send_midi_info (void);
 
     const char  *appname (void) const { return _appname; }
     uint16_t    *midimap (void) const { return (uint16_t *) _midimap; }

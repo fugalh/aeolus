@@ -29,6 +29,9 @@
 #include "rankwave.h"
 
 
+namespace aeolus_x11 {
+
+
 class H_scale : public X_window
 {
 public:
@@ -170,6 +173,8 @@ private:
     static const char   _fn [N_PFTB];
     static const char   _fd [N_PFTB];
 };
+
+} // namespace aeolus_x11
 
 
 #endif

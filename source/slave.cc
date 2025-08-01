@@ -64,7 +64,7 @@ void Slave::thr_main (void)
                 break;
             }
 
-               case MT_AUDIO_SYNC:
+            case MT_AUDIO_SYNC:
                 send_event (TO_AUDIO, M);
                 break;
 

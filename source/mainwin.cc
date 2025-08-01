@@ -23,6 +23,8 @@
 #include "callbacks.h"
 #include "styles.h"
 
+using namespace aeolus_x11;
+
 
 Splashwin::Splashwin (X_window *parent, int xp, int yp) :
     X_window (parent, xp, yp, XSIZE, YSIZE, Colors.spla_bg, Colors.black, 2)

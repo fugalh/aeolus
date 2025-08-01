@@ -106,8 +106,22 @@ void Audio::start (void)
     M->_fsize  = _fsize;
     M->_instrpar = _audiopar;
     for (i = 0; i < _nasect; i++) M->_asectpar [i] = _asectp [i]->get_apar ();
-    send_event (TO_MODEL, M);
+    send_event(TO_MODEL, M);
+
+#ifdef __APPLE__
+    {
+        // Send MIDI info to model thread since JACK handles MIDI in audio thread
+        // This is needed on all non-Linux platforms that use JACK for MIDI
+        M_midi_info* M = new M_midi_info();
+        M->_client = 0;  // No ALSA client
+        M->_ipport = 0;  // No ALSA port
+        memcpy(M->_chbits, _midimap, 16 * sizeof(uint16_t));
+        send_event(TO_MODEL, M);
+    }
+#endif
 }
+
+
 
 
 #ifdef __linux__

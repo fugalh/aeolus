@@ -31,6 +31,8 @@
 #include "midiwin.h"
 
 
+namespace aeolus_x11 {
+
 class Xiface : public Iface,  public X_callback
 {
 public:
@@ -73,6 +75,8 @@ private:
     M_ifc_dipar   *_dipar;
     M_ifc_edit    *_editp;
 };
+
+} // namespace aeolus_x11
 
 
 #endif
