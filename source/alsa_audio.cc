@@ -33,6 +33,8 @@ AlsaAudio::AlsaAudio (const char *appname, Lfq_u32 *qnote, Lfq_u32 *qcomm) :
 AlsaAudio::~AlsaAudio (void)
 {
     if (_alsa_handle) close_alsa ();
+    // Clean up _outbuf arrays that were allocated with new[]
+    for (int i = 0; i < 8; i++) delete[] _outbuf [i];
 }
 
 
