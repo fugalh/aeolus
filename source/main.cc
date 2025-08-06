@@ -34,11 +34,10 @@
 #include "xiface.h"
 #endif
 #include "global.h"
-#include "audio.h"
 #include "audio_factory.h"
 #ifdef __linux__
 #include "alsa_audio.h"
-#include "imidi.h"
+#include "alsa_midi.h"
 #endif
 #ifdef HAVE_JACK
 #include "jack_audio.h"
@@ -189,7 +188,7 @@ int main (int ac, char *av [])
     ITC_ctrl       itcc;
     AudioBackend  *audio;
 #ifdef __linux__
-    Imidi         *imidi;
+    AlsaMidi      *imidi;
 #endif
     Model         *model;
     Slave         *slave;
@@ -279,7 +278,7 @@ int main (int ac, char *av [])
     }
     model = new Model (&comm_queue, &midi_queue, audio->midimap (), audio->appname (), S_val, I_val, W_val, u_opt);
 #ifdef __linux__
-    imidi = new Imidi (&note_queue, &midi_queue, audio->midimap (), audio->appname ());
+    imidi = new AlsaMidi (&note_queue, &midi_queue, audio->midimap (), audio->appname ());
 #endif
     slave = new Slave ();
 

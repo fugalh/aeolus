@@ -10,7 +10,6 @@ target_compile_options(aeolus PRIVATE -Wno-deprecated-declarations -Wno-constant
 target_sources(
   aeolus
   PRIVATE source/main.cc
-          source/audio.cc
           source/audio_backend.cc
           source/audio_factory.cc
           source/midi_backend.cc
@@ -34,9 +33,9 @@ if(APPLE)
   set(ENV{PKG_CONFIG_PATH} "/opt/X11/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
   target_compile_definitions(aeolus PRIVATE STATIC_UI)
 elseif(UNIX)
-  # Linux uses separate MIDI thread with ALSA sequencer (imidi.cc), while macOS
+  # Linux uses separate MIDI thread with ALSA sequencer (alsa_midi.cc), while macOS
   # uses JACK MIDI which is in audio.cc
-  target_sources(aeolus PRIVATE source/imidi.cc source/alsa_audio.cc source/alsa_midi.cc)
+  target_sources(aeolus PRIVATE source/alsa_audio.cc source/alsa_midi.cc)
 
   # ALSA
   pkg_check_modules(ALSA REQUIRED alsa)
