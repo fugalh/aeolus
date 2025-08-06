@@ -96,6 +96,7 @@ pkg_check_modules(GMOCK gmock)
 option(BUILD_TESTS "Build unit tests" ${GMOCK_FOUND})
 if(BUILD_TESTS AND GMOCK_FOUND)
   enable_testing()
+  pkg_check_modules(GTEST_MAIN REQUIRED gtest_main)
   
   # Create test executable
   add_executable(aeolus_test)
@@ -132,7 +133,7 @@ if(BUILD_TESTS AND GMOCK_FOUND)
   
   target_link_libraries(aeolus_test PRIVATE 
       ${GMOCK_LDFLAGS}
-      -lgtest_main
+      ${GTEST_MAIN_LDFLAGS}
       ${CLTHREADS_LIB} 
       pthread
   )
