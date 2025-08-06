@@ -35,8 +35,13 @@
 #endif
 #include "global.h"
 #include "audio.h"
+#include "audio_factory.h"
 #ifdef __linux__
+#include "alsa_audio.h"
 #include "imidi.h"
+#endif
+#ifdef HAVE_JACK
+#include "jack_audio.h"
 #endif
 #include "model.h"
 #include "slave.h"
@@ -182,7 +187,7 @@ static void sigint_handler (int)
 int main (int ac, char *av [])
 {
     ITC_ctrl       itcc;
-    Audio         *audio;
+    AudioBackend  *audio;
 #ifdef __linux__
     Imidi         *imidi;
 #endif
@@ -241,13 +246,37 @@ int main (int ac, char *av [])
     iface = so_create (ac, av);
 #endif
 
-    audio = new Audio (N_val, &note_queue, &comm_queue);
+    // Create audio backend using factory
 #ifdef __linux__
-    if (A_opt) audio->init_alsa (d_val, r_val, p_val, n_val);
-    else       audio->init_jack (s_val, B_opt, &midi_queue);
+    if (A_opt)
+    {
+        audio = AudioFactory::create(AudioType::ALSA, N_val, &note_queue, &comm_queue);
+        if (audio)
+        {
+            static_cast<AlsaAudio*>(audio)->init_alsa(d_val, r_val, p_val, n_val);
+        }
+    }
+    else
+    {
+        audio = AudioFactory::create(AudioType::JACK, N_val, &note_queue, &comm_queue);
+        if (audio)
+        {
+            static_cast<JackAudio*>(audio)->init_jack(s_val, B_opt, &midi_queue);
+        }
+    }
 #else
-    audio->init_jack (s_val, B_opt, &midi_queue);
+    audio = AudioFactory::create(AudioType::JACK, N_val, &note_queue, &comm_queue);
+    if (audio)
+    {
+        static_cast<JackAudio*>(audio)->init_jack(s_val, B_opt, &midi_queue);
+    }
 #endif
+
+    if (!audio)
+    {
+        fprintf(stderr, "Error: Failed to create audio backend\n");
+        exit(1);
+    }
     model = new Model (&comm_queue, &midi_queue, audio->midimap (), audio->appname (), S_val, I_val, W_val, u_opt);
 #ifdef __linux__
     imidi = new Imidi (&note_queue, &midi_queue, audio->midimap (), audio->appname ());
