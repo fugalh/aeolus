@@ -92,13 +92,10 @@ if(READLINE_LIB)
 endif()
 
 # Optional unit tests
-option(BUILD_TESTS "Build unit tests" OFF)
-if(BUILD_TESTS)
+pkg_check_modules(GMOCK gmock)
+option(BUILD_TESTS "Build unit tests" ${GMOCK_FOUND})
+if(BUILD_TESTS AND GMOCK_FOUND)
   enable_testing()
-  
-  # Find GTest and GTest Main
-  pkg_check_modules(GTEST REQUIRED gtest)
-  pkg_check_modules(GTEST_MAIN REQUIRED gtest_main)
   
   # Create test executable
   add_executable(aeolus_test)
@@ -129,13 +126,13 @@ if(BUILD_TESTS)
   
   # Configure test target
   target_include_directories(aeolus_test PRIVATE 
-      ${GTEST_INCLUDE_DIRS}
+      ${GMOCK_INCLUDE_DIRS}
       source
   )
   
   target_link_libraries(aeolus_test PRIVATE 
-      ${GTEST_LDFLAGS}
-      ${GTEST_MAIN_LDFLAGS}
+      ${GMOCK_LDFLAGS}
+      -lgtest_main
       ${CLTHREADS_LIB} 
       pthread
   )

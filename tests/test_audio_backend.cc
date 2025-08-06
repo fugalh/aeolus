@@ -17,9 +17,13 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "audio_backend.h"
 #include "lfqueue.h"
+
+using ::testing::_;
+using ::testing::Return;
 
 // Mock AudioBackend implementation for testing
 class MockAudioBackend : public AudioBackend
@@ -27,11 +31,9 @@ class MockAudioBackend : public AudioBackend
 public:
     MockAudioBackend() : AudioBackend("test", &note_queue, &comm_queue) {}
     
-    void start() override { started = true; }
-    int relpri() const override { return 10; }
-    
-    // A_thread pure virtual method - empty implementation for testing
-    void thr_main() override {}
+    MOCK_METHOD(void, start, (), (override));
+    MOCK_METHOD(int, relpri, (), (const, override));
+    MOCK_METHOD(void, thr_main, (), (override));
     
     // Public wrappers for testing protected methods
     void test_proc_queue(Lfq_u32* queue) { proc_queue(queue); }
@@ -52,7 +54,6 @@ public:
     }
     
     // Test helpers
-    bool started = false;
     Lfq_u32 note_queue{256};
     Lfq_u32 comm_queue{256};
 };
@@ -73,15 +74,16 @@ protected:
 TEST_F(AudioBackendTest, Constructor) {
     EXPECT_STREQ(backend->appname(), "test");
     EXPECT_NE(backend->midimap(), nullptr);
-    EXPECT_FALSE(backend->started);
 }
 
 TEST_F(AudioBackendTest, Start) {
+    EXPECT_CALL(*backend, start());
     backend->start();
-    EXPECT_TRUE(backend->started);
 }
 
 TEST_F(AudioBackendTest, RelativePriority) {
+    EXPECT_CALL(*backend, relpri())
+        .WillOnce(Return(10));
     EXPECT_EQ(backend->relpri(), 10);
 }
 
@@ -129,6 +131,8 @@ TEST_F(AudioBackendTest, SynthesisProcessing) {
     // Test synthesis processing with different frame counts - just verify method calls don't crash
     // Note: We don't call the actual proc_synth as it requires fully initialized audio pipeline
     // This test mainly verifies the interface is accessible and won't crash with simple operations
+    EXPECT_CALL(*backend, relpri())
+        .WillOnce(Return(10));
     EXPECT_EQ(backend->relpri(), 10); // Just verify basic functionality works
 }
 

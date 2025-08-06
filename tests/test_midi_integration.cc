@@ -17,11 +17,15 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "midi_processor.h"
 #include "midi_backend.h"
 #include "lfqueue.h"
 #include "global.h"
+
+using ::testing::_;
+using ::testing::Return;
 
 // Mock MIDI backend for integration testing
 class MockMidiBackend : public MidiBackend
@@ -29,8 +33,7 @@ class MockMidiBackend : public MidiBackend
 public:
     MockMidiBackend() : MidiBackend("test", &note_queue, &midi_queue, midimap, "test_app") {}
     
-    // Pure virtual implementations
-    void terminate() override {}
+    MOCK_METHOD(void, terminate, (), (override));
     
     // Test interface methods
     int open() { 

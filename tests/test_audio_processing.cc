@@ -17,10 +17,14 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "audio_backend.h"
 #include "lfqueue.h"
 #include "messages.h"
+
+using ::testing::_;
+using ::testing::Return;
 
 // Enhanced mock that tracks processing behavior
 class ProcessingTrackingMock : public AudioBackend
@@ -28,9 +32,9 @@ class ProcessingTrackingMock : public AudioBackend
 public:
     ProcessingTrackingMock() : AudioBackend("test", &note_queue, &comm_queue) {}
     
-    void start() override { started = true; }
-    int relpri() const override { return 10; }
-    void thr_main() override {}
+    MOCK_METHOD(void, start, (), (override));
+    MOCK_METHOD(int, relpri, (), (const, override));
+    MOCK_METHOD(void, thr_main, (), (override));
     
     // Public wrappers that track processing calls
     void proc_queue(Lfq_u32* queue) {

@@ -17,60 +17,28 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "midi_processor.h"
 #include "lfqueue.h"
+
+using ::testing::_;
+using ::testing::StrictMock;
 
 // Mock handler to capture MIDI events
 class MockMidiHandler : public MidiProcessor::Handler
 {
 public:
-    void key_on(int note, int keyboard) override {
-        last_note_on = note;
-        last_keyboard = keyboard; 
-        key_on_called = true;
-    }
-    
-    void key_off(int note, int keyboard) override {
-        last_note_off = note;
-        last_keyboard = keyboard;
-        key_off_called = true;
-    }
-    
-    void all_sound_off() override { all_sound_off_called = true; }
-    void all_notes_off(int keyboard) override { 
-        all_notes_off_called = true;
-        last_keyboard = keyboard;
-    }
-    void hold_pedal(int keyboard, bool on) override { 
-        hold_pedal_called = true;
-        last_keyboard = keyboard;
-        hold_state = on;
-    }
-    
-    // Test state
-    int last_note_on = -1;
-    int last_note_off = -1;
-    int last_keyboard = -1;
-    bool hold_state = false;
-    bool key_on_called = false;
-    bool key_off_called = false;
-    bool all_sound_off_called = false;
-    bool all_notes_off_called = false;
-    bool hold_pedal_called = false;
-    
-    void reset() {
-        last_note_on = last_note_off = last_keyboard = -1;
-        hold_state = false;
-        key_on_called = key_off_called = all_sound_off_called = 
-        all_notes_off_called = hold_pedal_called = false;
-    }
+    MOCK_METHOD(void, key_on, (int note, int keyboard), (override));
+    MOCK_METHOD(void, key_off, (int note, int keyboard), (override));
+    MOCK_METHOD(void, all_sound_off, (), (override));
+    MOCK_METHOD(void, all_notes_off, (int keyboard), (override));
+    MOCK_METHOD(void, hold_pedal, (int keyboard, bool on), (override));
 };
 
 class MidiProcessorTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        handler.reset();
         // Initialize midimap with proper flags:
         // Bit 0: keyboard-enabled (for note events)
         // Bit 2: control-enabled (for controllers)
@@ -80,7 +48,7 @@ protected:
         }
     }
     
-    MockMidiHandler handler;
+    StrictMock<MockMidiHandler> handler;
     Lfq_u32 note_queue{256};
     Lfq_u8 midi_queue{1024};
     uint16_t midimap[16];
@@ -93,12 +61,10 @@ TEST_F(MidiProcessorTest, NoteOnMessage) {
     uint8_t velocity = 64;
     uint8_t channel = 0;
     
+    EXPECT_CALL(handler, key_on(24, 0));  // MIDI note 60 - 36 = 24, keyboard 0
+    
     MidiProcessor::process_midi_event(status, note, velocity, channel,
                                      midimap, &handler, &note_queue, &midi_queue);
-    
-    EXPECT_TRUE(handler.key_on_called);
-    EXPECT_EQ(handler.last_note_on, 24);  // MIDI note 60 - 36 = 24
-    EXPECT_EQ(handler.last_keyboard, 0);
 }
 
 TEST_F(MidiProcessorTest, NoteOffMessage) {
@@ -108,12 +74,10 @@ TEST_F(MidiProcessorTest, NoteOffMessage) {
     uint8_t velocity = 0;
     uint8_t channel = 0;
     
+    EXPECT_CALL(handler, key_off(24, 0));  // MIDI note 60 - 36 = 24, keyboard 0
+    
     MidiProcessor::process_midi_event(status, note, velocity, channel,
                                      midimap, &handler, &note_queue, &midi_queue);
-    
-    EXPECT_TRUE(handler.key_off_called);
-    EXPECT_EQ(handler.last_note_off, 24);  // MIDI note 60 - 36 = 24
-    EXPECT_EQ(handler.last_keyboard, 0);
 }
 
 TEST_F(MidiProcessorTest, AllSoundOffController) {
@@ -123,10 +87,10 @@ TEST_F(MidiProcessorTest, AllSoundOffController) {
     uint8_t value = 0;
     uint8_t channel = 0;
     
+    EXPECT_CALL(handler, all_sound_off());
+    
     MidiProcessor::process_midi_event(status, controller, value, channel,
                                      midimap, &handler, &note_queue, &midi_queue);
-    
-    EXPECT_TRUE(handler.all_sound_off_called);
 }
 
 TEST_F(MidiProcessorTest, AllNotesOffController) {
@@ -136,11 +100,10 @@ TEST_F(MidiProcessorTest, AllNotesOffController) {
     uint8_t value = 0;
     uint8_t channel = 1;
     
+    EXPECT_CALL(handler, all_notes_off(1));  // keyboard 1
+    
     MidiProcessor::process_midi_event(status, controller, value, channel,
                                      midimap, &handler, &note_queue, &midi_queue);
-    
-    EXPECT_TRUE(handler.all_notes_off_called);
-    EXPECT_EQ(handler.last_keyboard, 1);
 }
 
 TEST_F(MidiProcessorTest, SustainPedal) {
@@ -150,21 +113,17 @@ TEST_F(MidiProcessorTest, SustainPedal) {
     uint8_t value = 127;
     uint8_t channel = 2;
     
+    EXPECT_CALL(handler, hold_pedal(2, true));  // keyboard 2, on
+    
     MidiProcessor::process_midi_event(status, controller, value, channel,
                                      midimap, &handler, &note_queue, &midi_queue);
-    
-    EXPECT_TRUE(handler.hold_pedal_called);
-    EXPECT_EQ(handler.last_keyboard, 2);
-    EXPECT_TRUE(handler.hold_state);
     
     // Test sustain off
-    handler.reset();
     value = 0;  // value 0 (off)
+    EXPECT_CALL(handler, hold_pedal(2, false));  // keyboard 2, off
+    
     MidiProcessor::process_midi_event(status, controller, value, channel,
                                      midimap, &handler, &note_queue, &midi_queue);
-    
-    EXPECT_TRUE(handler.hold_pedal_called);
-    EXPECT_FALSE(handler.hold_state);
 }
 
 TEST_F(MidiProcessorTest, HelperFunctions) {
