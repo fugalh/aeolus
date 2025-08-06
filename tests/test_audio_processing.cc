@@ -19,12 +19,16 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+#include <array>
 #include "audio_backend.h"
 #include "lfqueue.h"
 #include "messages.h"
 
 using ::testing::_;
 using ::testing::Return;
+using namespace std::literals;
 
 // Enhanced mock using proper GMock expectations
 class ProcessingTrackingMock : public AudioBackend
@@ -102,14 +106,10 @@ public:
 class AudioProcessingTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        mock = new ProcessingTrackingMock();
+        mock = std::make_unique<ProcessingTrackingMock>();
     }
     
-    void TearDown() override {
-        delete mock;
-    }
-    
-    ProcessingTrackingMock* mock;
+    std::unique_ptr<ProcessingTrackingMock> mock;
 };
 
 TEST_F(AudioProcessingTest, AudioPipelineExecution) {
@@ -186,10 +186,10 @@ TEST_F(AudioProcessingTest, DirectKeyEvents) {
 }
 
 TEST_F(AudioProcessingTest, VariableBufferSizes) {
-    // Test processing with different buffer sizes
-    std::vector<int> buffer_sizes = {32, 64, 128, 256, 512, 1024, 2048};
+    // Test processing with different buffer sizes using modern C++ container
+    constexpr std::array buffer_sizes{32, 64, 128, 256, 512, 1024, 2048};
     
-    for (int size : buffer_sizes) {
+    for (const auto size : buffer_sizes) {
         EXPECT_CALL(*mock, mock_proc_synth(size));
         mock->proc_synth(size);
     }

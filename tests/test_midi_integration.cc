@@ -19,6 +19,10 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+#include <array>
+#include <span>
 #include "midi_processor.h"
 #include "midi_backend.h"
 #include "lfqueue.h"
@@ -26,12 +30,18 @@
 
 using ::testing::_;
 using ::testing::Return;
+using namespace std::literals;
 
-// Mock MIDI backend for integration testing
+// Mock MIDI backend for integration testing  
 class MockMidiBackend : public MidiBackend
 {
+    static inline std::array<uint16_t, 16> static_midimap{};  // Static initialization
+    
 public:
-    MockMidiBackend() : MidiBackend("test", &note_queue, &midi_queue, midimap, "test_app") {}
+    MockMidiBackend() : MidiBackend("test", &note_queue, &midi_queue, static_midimap.data(), "test_app") {
+        // Copy static midimap to instance member after construction
+        midimap = static_midimap;
+    }
     
     MOCK_METHOD(void, terminate, (), (override));
     
@@ -52,11 +62,11 @@ private:
     void proc_midi() override {}
     
 public:
-    // Test state
+    // Test state - order matters for initialization  
+    std::array<uint16_t, 16> midimap{};  // Initialize first
     bool opened = false;
     Lfq_u32 note_queue{256};
     Lfq_u8 midi_queue{1024};
-    uint16_t midimap[16];
 };
 
 // Enhanced MIDI handler for integration testing
@@ -129,20 +139,16 @@ public:
 class MidiIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        backend = new MockMidiBackend();
+        backend = std::make_unique<MockMidiBackend>();
         handler.reset();
         
         // Initialize midimap with proper flags for all channels
-        for (int i = 0; i < 16; i++) {
-            backend->midimap[i] = i | (1 << 12) | (4 << 12);  // Enable keyboard and control flags
+        for (auto i = 0u; i < backend->midimap.size(); ++i) {
+            backend->midimap[i] = static_cast<uint16_t>(i | (5u << 12u));  // Enable keyboard and control flags (1|4)
         }
     }
     
-    void TearDown() override {
-        delete backend;
-    }
-    
-    MockMidiBackend* backend;
+    std::unique_ptr<MockMidiBackend> backend;
     IntegrationMidiHandler handler;
 };
 
@@ -179,7 +185,7 @@ TEST_F(MidiIntegrationTest, ComplexMidiSequence) {
     for (auto& event : midi_events) {
         MidiProcessor::process_midi_event(
             std::get<0>(event), std::get<1>(event), std::get<2>(event), std::get<3>(event),
-            backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+            backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     }
     
     // Verify we got the expected key events
@@ -201,13 +207,13 @@ TEST_F(MidiIntegrationTest, MultiChannelProcessing) {
     handler.reset();
     
     // Channel 0: Note on
-    MidiProcessor::process_midi_event(0x90, 60, 64, 0, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+    MidiProcessor::process_midi_event(0x90, 60, 64, 0, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     
     // Channel 5: Note on  
-    MidiProcessor::process_midi_event(0x95, 72, 80, 5, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+    MidiProcessor::process_midi_event(0x95, 72, 80, 5, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     
     // Channel 15: Note on
-    MidiProcessor::process_midi_event(0x9F, 48, 100, 15, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+    MidiProcessor::process_midi_event(0x9F, 48, 100, 15, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     
     EXPECT_EQ(handler.key_events.size(), 3);
     
@@ -232,7 +238,7 @@ TEST_F(MidiIntegrationTest, ControllerMessages) {
     for (auto& event : controller_tests) {
         MidiProcessor::process_midi_event(
             std::get<0>(event), std::get<1>(event), std::get<2>(event), std::get<3>(event),
-            backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+            backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     }
     
     EXPECT_EQ(handler.hold_events.size(), 2);  // 2 sustain events
@@ -267,7 +273,7 @@ TEST_F(MidiIntegrationTest, EdgeCaseNoteNumbers) {
         bool should_process = std::get<1>(note_test);
         
         handler.reset();
-        MidiProcessor::process_midi_event(0x90, note, 64, 0, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+        MidiProcessor::process_midi_event(0x90, note, 64, 0, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
         
         if (should_process) {
             EXPECT_EQ(handler.key_events.size(), 1) << "Note " << (int)note << " should be processed";
@@ -286,7 +292,7 @@ TEST_F(MidiIntegrationTest, VelocityHandling) {
     
     for (uint8_t vel : velocities) {
         handler.reset();
-        MidiProcessor::process_midi_event(0x90, 60, vel, 0, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+        MidiProcessor::process_midi_event(0x90, 60, vel, 0, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
         
         EXPECT_EQ(handler.key_events.size(), 1) << "Velocity " << (int)vel << " should produce key event";
         EXPECT_TRUE(handler.key_events[0].on) << "Velocity " << (int)vel << " should be note on";
@@ -294,7 +300,7 @@ TEST_F(MidiIntegrationTest, VelocityHandling) {
     
     // Test velocity 0 (should be note off)
     handler.reset();
-    MidiProcessor::process_midi_event(0x90, 60, 0, 0, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+    MidiProcessor::process_midi_event(0x90, 60, 0, 0, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     
     EXPECT_EQ(handler.key_events.size(), 1);
     EXPECT_FALSE(handler.key_events[0].on); // Velocity 0 should be note off
@@ -306,13 +312,13 @@ TEST_F(MidiIntegrationTest, QueueWriteOperations) {
     int initial_midi_queue_avail = backend->midi_queue.read_avail();
     
     // Send a note event
-    MidiProcessor::process_midi_event(0x90, 60, 64, 0, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+    MidiProcessor::process_midi_event(0x90, 60, 64, 0, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     
     // Check that note queue has new data
     EXPECT_GT(backend->note_queue.read_avail(), initial_note_queue_avail);
     
     // Send a program change (should go to MIDI queue)
-    MidiProcessor::process_midi_event(0xC0, 42, 0, 0, backend->midimap, &handler, &backend->note_queue, &backend->midi_queue);
+    MidiProcessor::process_midi_event(0xC0, 42, 0, 0, backend->midimap.data(), &handler, &backend->note_queue, &backend->midi_queue);
     
     // Check that MIDI queue has new data
     EXPECT_GT(backend->midi_queue.read_avail(), initial_midi_queue_avail);

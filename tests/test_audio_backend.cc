@@ -19,11 +19,15 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+#include <array>
 #include "audio_backend.h"
 #include "lfqueue.h"
 
 using ::testing::_;
 using ::testing::Return;
+using namespace std::literals;
 
 // Mock AudioBackend implementation for testing
 class MockAudioBackend : public AudioBackend
@@ -61,14 +65,10 @@ public:
 class AudioBackendTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        backend = new MockAudioBackend();
+        backend = std::make_unique<MockAudioBackend>();
     }
     
-    void TearDown() override {
-        delete backend;
-    }
-    
-    MockAudioBackend* backend;
+    std::unique_ptr<MockAudioBackend> backend;
 };
 
 TEST_F(AudioBackendTest, Constructor) {
