@@ -49,6 +49,28 @@ AudioBackend* AudioFactory::create(AudioType type, const char* appname,
     }
 }
 
+#ifdef __linux__
+AudioBackend* AudioFactory::create_alsa(const char* appname, 
+                                        Lfq_u32* note_queue, Lfq_u32* comm_queue,
+                                        const AlsaConfig& config)
+{
+    AlsaAudio* audio = new AlsaAudio(appname, note_queue, comm_queue);
+    audio->init_alsa(config.device, config.fsamp, config.fsize, config.nfrag);
+    return audio;
+}
+#endif
+
+#ifdef HAVE_JACK
+AudioBackend* AudioFactory::create_jack(const char* appname, 
+                                        Lfq_u32* note_queue, Lfq_u32* comm_queue,
+                                        const JackConfig& config)
+{
+    JackAudio* audio = new JackAudio(appname, note_queue, comm_queue);
+    audio->init_jack(config.server, config.bform, config.qmidi);
+    return audio;
+}
+#endif
+
 
 bool AudioFactory::is_available(AudioType type)
 {

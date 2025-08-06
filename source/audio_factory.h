@@ -33,6 +33,21 @@ enum class AudioType
 };
 
 
+struct AlsaConfig
+{
+    const char* device;
+    int fsamp;
+    int fsize;
+    int nfrag;
+};
+
+struct JackConfig
+{
+    const char* server;
+    bool bform;
+    Lfq_u8* qmidi;
+};
+
 class AudioFactory
 {
 public:
@@ -40,6 +55,16 @@ public:
     // Create appropriate audio backend based on type
     static AudioBackend* create(AudioType type, const char* appname, 
                                Lfq_u32* note_queue, Lfq_u32* comm_queue);
+
+    // Create and initialize ALSA backend
+    static AudioBackend* create_alsa(const char* appname, 
+                                    Lfq_u32* note_queue, Lfq_u32* comm_queue,
+                                    const AlsaConfig& config);
+
+    // Create and initialize JACK backend
+    static AudioBackend* create_jack(const char* appname, 
+                                    Lfq_u32* note_queue, Lfq_u32* comm_queue,
+                                    const JackConfig& config);
 
     // Helper to determine available backend types
     static bool is_available(AudioType type);

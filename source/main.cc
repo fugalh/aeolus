@@ -36,11 +36,7 @@
 #include "global.h"
 #include "audio_factory.h"
 #ifdef __linux__
-#include "alsa_audio.h"
 #include "alsa_midi.h"
-#endif
-#ifdef HAVE_JACK
-#include "jack_audio.h"
 #endif
 #include "model.h"
 #include "slave.h"
@@ -249,26 +245,17 @@ int main (int ac, char *av [])
 #ifdef __linux__
     if (A_opt)
     {
-        audio = AudioFactory::create(AudioType::ALSA, N_val, &note_queue, &comm_queue);
-        if (audio)
-        {
-            static_cast<AlsaAudio*>(audio)->init_alsa(d_val, r_val, p_val, n_val);
-        }
+        AlsaConfig config = {d_val, r_val, p_val, n_val};
+        audio = AudioFactory::create_alsa(N_val, &note_queue, &comm_queue, config);
     }
     else
     {
-        audio = AudioFactory::create(AudioType::JACK, N_val, &note_queue, &comm_queue);
-        if (audio)
-        {
-            static_cast<JackAudio*>(audio)->init_jack(s_val, B_opt, &midi_queue);
-        }
+        JackConfig config = {s_val, B_opt, &midi_queue};
+        audio = AudioFactory::create_jack(N_val, &note_queue, &comm_queue, config);
     }
 #else
-    audio = AudioFactory::create(AudioType::JACK, N_val, &note_queue, &comm_queue);
-    if (audio)
-    {
-        static_cast<JackAudio*>(audio)->init_jack(s_val, B_opt, &midi_queue);
-    }
+    JackConfig config = {s_val, B_opt, &midi_queue};
+    audio = AudioFactory::create_jack(N_val, &note_queue, &comm_queue, config);
 #endif
 
     if (!audio)
