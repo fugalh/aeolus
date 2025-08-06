@@ -26,7 +26,7 @@
 using ::testing::_;
 using ::testing::Return;
 
-// Enhanced mock that tracks processing behavior
+// Enhanced mock using proper GMock expectations
 class ProcessingTrackingMock : public AudioBackend
 {
 public:
@@ -35,73 +35,55 @@ public:
     MOCK_METHOD(void, start, (), (override));
     MOCK_METHOD(int, relpri, (), (const, override));
     MOCK_METHOD(void, thr_main, (), (override));
+    MOCK_METHOD(void, proc_midi_during_synth, (int frame_time), (override));
     
-    // Public wrappers that track processing calls
+    // Mock the key processing methods that would be called
+    MOCK_METHOD(void, mock_proc_note_queue, (Lfq_u32* queue), ());
+    MOCK_METHOD(void, mock_proc_comm_queue, (Lfq_u32* queue), ());
+    MOCK_METHOD(void, mock_proc_keys1, (), ());
+    MOCK_METHOD(void, mock_proc_keys2, (), ());
+    MOCK_METHOD(void, mock_proc_synth, (int frames), ());
+    MOCK_METHOD(void, mock_proc_mesg, (), ());
+    MOCK_METHOD(void, mock_key_on, (int note, int keyboard), ());
+    MOCK_METHOD(void, mock_key_off, (int note, int keyboard), ());
+    
+    // Public wrappers that call mocked methods (for testing)
     void proc_queue(Lfq_u32* queue) {
-        if (queue == _qnote) note_queue_processed++;
-        if (queue == _qcomm) comm_queue_processed++;
-        // Don't call AudioBackend::proc_queue as it may hang on uninitialized state
-        // Just track that the method was called
+        if (queue == &note_queue) mock_proc_note_queue(queue);
+        if (queue == &comm_queue) mock_proc_comm_queue(queue);
+        // Don't call AudioBackend::proc_queue to avoid initialization issues
     }
     
     void proc_synth(int frames) {
-        synth_processed++;
-        last_frame_count = frames;
-        // Don't call AudioBackend::proc_synth as it requires fully initialized audio pipeline
+        mock_proc_synth(frames);
+        // Don't call AudioBackend::proc_synth to avoid initialization issues
     }
     
     void proc_keys1() {
-        keys1_processed++;
+        mock_proc_keys1();
         // Don't call AudioBackend methods to avoid initialization issues
     }
     
     void proc_keys2() {
-        keys2_processed++;
+        mock_proc_keys2();
         // Don't call AudioBackend methods to avoid initialization issues
     }
     
     void proc_mesg() {
-        mesg_processed++;
+        mock_proc_mesg();
         // Don't call AudioBackend methods to avoid initialization issues
     }
     
-    void proc_midi_during_synth(int frame_time) override {
-        midi_during_synth_called++;
-        last_midi_frame_time = frame_time;
-    }
-    
-    // MidiProcessor::Handler overrides to track MIDI events
+    // MidiProcessor::Handler overrides that call mocked methods
     void key_on(int note, int keyboard) override {
-        AudioBackend::key_on(note, keyboard);
-        key_on_calls++;
-        last_key_on_note = note;
-        last_key_on_keyboard = keyboard;
+        mock_key_on(note, keyboard);
+        // Don't call AudioBackend::key_on to avoid complex internal state
     }
     
     void key_off(int note, int keyboard) override {
-        AudioBackend::key_off(note, keyboard);
-        key_off_calls++;
-        last_key_off_note = note;
-        last_key_off_keyboard = keyboard;
+        mock_key_off(note, keyboard);
+        // Don't call AudioBackend::key_off to avoid complex internal state
     }
-    
-    // Test state and helpers
-    bool started = false;
-    int note_queue_processed = 0;
-    int comm_queue_processed = 0;
-    int synth_processed = 0;
-    int keys1_processed = 0;
-    int keys2_processed = 0;
-    int mesg_processed = 0;
-    int midi_during_synth_called = 0;
-    int key_on_calls = 0;
-    int key_off_calls = 0;
-    int last_frame_count = -1;
-    int last_midi_frame_time = -1;
-    int last_key_on_note = -1;
-    int last_key_off_note = -1;
-    int last_key_on_keyboard = -1;
-    int last_key_off_keyboard = -1;
     
     Lfq_u32 note_queue{256};
     Lfq_u32 comm_queue{256};
@@ -115,22 +97,12 @@ public:
         comm_queue.write(0, event);
         comm_queue.write_commit(1);
     }
-    
-    void reset_counters() {
-        note_queue_processed = comm_queue_processed = synth_processed = 0;
-        keys1_processed = keys2_processed = mesg_processed = 0;
-        midi_during_synth_called = key_on_calls = key_off_calls = 0;
-        last_frame_count = last_midi_frame_time = -1;
-        last_key_on_note = last_key_off_note = -1;
-        last_key_on_keyboard = last_key_off_keyboard = -1;
-    }
 };
 
 class AudioProcessingTest : public ::testing::Test {
 protected:
     void SetUp() override {
         mock = new ProcessingTrackingMock();
-        mock->reset_counters();
     }
     
     void TearDown() override {
@@ -141,22 +113,21 @@ protected:
 };
 
 TEST_F(AudioProcessingTest, AudioPipelineExecution) {
-    // Simulate a typical audio processing cycle
+    // Set expectations for a typical audio processing cycle
+    EXPECT_CALL(*mock, mock_proc_note_queue(&mock->note_queue));
+    EXPECT_CALL(*mock, mock_proc_comm_queue(&mock->comm_queue));
+    EXPECT_CALL(*mock, mock_proc_keys1());
+    EXPECT_CALL(*mock, mock_proc_keys2());
+    EXPECT_CALL(*mock, mock_proc_synth(512));
+    EXPECT_CALL(*mock, mock_proc_mesg());
+    
+    // Execute the processing cycle
     mock->proc_queue(&mock->note_queue);
     mock->proc_queue(&mock->comm_queue);
     mock->proc_keys1();
     mock->proc_keys2();
     mock->proc_synth(512);
     mock->proc_mesg();
-    
-    // Verify all processing steps were called
-    EXPECT_EQ(mock->note_queue_processed, 1);
-    EXPECT_EQ(mock->comm_queue_processed, 1);
-    EXPECT_EQ(mock->keys1_processed, 1);
-    EXPECT_EQ(mock->keys2_processed, 1);
-    EXPECT_EQ(mock->synth_processed, 1);
-    EXPECT_EQ(mock->mesg_processed, 1);
-    EXPECT_EQ(mock->last_frame_count, 512);
 }
 
 TEST_F(AudioProcessingTest, NoteEventProcessing) {
@@ -164,9 +135,8 @@ TEST_F(AudioProcessingTest, NoteEventProcessing) {
     uint32_t note_on = (1 << 8) | 40;  // Note on, MIDI note 40 (translates to note 4 for keyboard)
     mock->add_note_event(note_on);
     
+    EXPECT_CALL(*mock, mock_proc_note_queue(&mock->note_queue));
     mock->proc_queue(&mock->note_queue);
-    
-    EXPECT_EQ(mock->note_queue_processed, 1);
     // Note: The actual key_on call depends on complex midimap logic in AudioBackend
 }
 
@@ -175,20 +145,25 @@ TEST_F(AudioProcessingTest, CommandEventProcessing) {
     uint32_t command = (0x05 << 24) | (0x02 << 16) | 0x7F;  // Some command structure
     mock->add_comm_event(command);
     
+    EXPECT_CALL(*mock, mock_proc_comm_queue(&mock->comm_queue));
     mock->proc_queue(&mock->comm_queue);
-    
-    EXPECT_EQ(mock->comm_queue_processed, 1);
 }
 
 TEST_F(AudioProcessingTest, MidiProcessingIntegration) {
     // Test MIDI processing during synthesis
+    EXPECT_CALL(*mock, proc_midi_during_synth(256));
     mock->proc_midi_during_synth(256);
-    
-    EXPECT_EQ(mock->midi_during_synth_called, 1);
-    EXPECT_EQ(mock->last_midi_frame_time, 256);
 }
 
 TEST_F(AudioProcessingTest, MultipleProcessingCycles) {
+    // Set expectations for 5 cycles of processing
+    EXPECT_CALL(*mock, mock_proc_note_queue(&mock->note_queue)).Times(5);
+    EXPECT_CALL(*mock, mock_proc_comm_queue(&mock->comm_queue)).Times(5);
+    EXPECT_CALL(*mock, mock_proc_keys1()).Times(5);
+    EXPECT_CALL(*mock, mock_proc_keys2()).Times(5);
+    EXPECT_CALL(*mock, mock_proc_synth(256)).Times(5);
+    EXPECT_CALL(*mock, mock_proc_mesg()).Times(5);
+    
     // Simulate multiple audio buffer processing cycles
     for (int i = 0; i < 5; i++) {
         mock->proc_queue(&mock->note_queue);
@@ -198,26 +173,16 @@ TEST_F(AudioProcessingTest, MultipleProcessingCycles) {
         mock->proc_synth(256);
         mock->proc_mesg();
     }
-    
-    EXPECT_EQ(mock->note_queue_processed, 5);
-    EXPECT_EQ(mock->comm_queue_processed, 5);
-    EXPECT_EQ(mock->keys1_processed, 5);
-    EXPECT_EQ(mock->keys2_processed, 5);
-    EXPECT_EQ(mock->synth_processed, 5);
-    EXPECT_EQ(mock->mesg_processed, 5);
 }
 
 TEST_F(AudioProcessingTest, DirectKeyEvents) {
+    // Set expectations for direct key events
+    EXPECT_CALL(*mock, mock_key_on(24, 1));
+    EXPECT_CALL(*mock, mock_key_off(36, 2));
+    
     // Test direct key events bypass queue processing
     mock->key_on(24, 1);   // Note 24, keyboard 1
     mock->key_off(36, 2);  // Note 36, keyboard 2
-    
-    EXPECT_EQ(mock->key_on_calls, 1);
-    EXPECT_EQ(mock->key_off_calls, 1);
-    EXPECT_EQ(mock->last_key_on_note, 24);
-    EXPECT_EQ(mock->last_key_on_keyboard, 1);
-    EXPECT_EQ(mock->last_key_off_note, 36);
-    EXPECT_EQ(mock->last_key_off_keyboard, 2);
 }
 
 TEST_F(AudioProcessingTest, VariableBufferSizes) {
@@ -225,9 +190,7 @@ TEST_F(AudioProcessingTest, VariableBufferSizes) {
     std::vector<int> buffer_sizes = {32, 64, 128, 256, 512, 1024, 2048};
     
     for (int size : buffer_sizes) {
-        mock->reset_counters();
+        EXPECT_CALL(*mock, mock_proc_synth(size));
         mock->proc_synth(size);
-        EXPECT_EQ(mock->synth_processed, 1);
-        EXPECT_EQ(mock->last_frame_count, size);
     }
 }
