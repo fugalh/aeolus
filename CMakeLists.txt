@@ -96,15 +96,15 @@ option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)
   enable_testing()
   
-  # Find GTest
+  # Find GTest and GTest Main
   pkg_check_modules(GTEST REQUIRED gtest)
+  pkg_check_modules(GTEST_MAIN REQUIRED gtest_main)
   
   # Create test executable
   add_executable(aeolus_test)
   
-  # Add test sources
+  # Add test sources (no need for test_main.cc with gtest_main)
   target_sources(aeolus_test PRIVATE
-      tests/test_main.cc
       tests/test_audio_backend.cc
       tests/test_midi_processor.cc
       tests/test_audio_processing.cc
@@ -135,6 +135,7 @@ if(BUILD_TESTS)
   
   target_link_libraries(aeolus_test PRIVATE 
       ${GTEST_LDFLAGS}
+      ${GTEST_MAIN_LDFLAGS}
       ${CLTHREADS_LIB} 
       pthread
   )
