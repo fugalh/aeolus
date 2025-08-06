@@ -11,8 +11,11 @@ target_sources(
   aeolus
   PRIVATE source/main.cc
           source/audio.cc
+          source/audio_backend.cc
+          source/midi_backend.cc
           source/model.cc
           source/slave.cc
+          source/midi_processor.cc
           source/addsynth.cc
           source/scales.cc
           source/reverb.cc
@@ -32,7 +35,7 @@ if(APPLE)
 elseif(UNIX)
   # Linux uses separate MIDI thread with ALSA sequencer (imidi.cc), while macOS
   # uses JACK MIDI which is in audio.cc
-  target_sources(aeolus PRIVATE source/imidi.cc)
+  target_sources(aeolus PRIVATE source/imidi.cc source/alsa_audio.cc source/alsa_midi.cc)
 
   # ALSA
   pkg_check_modules(ALSA REQUIRED alsa)
@@ -53,6 +56,7 @@ pkg_check_modules(JACK REQUIRED jack)
 target_compile_definitions(aeolus PRIVATE HAVE_JACK)
 target_include_directories(aeolus PRIVATE ${JACK_INCLUDE_DIRS})
 target_link_libraries(aeolus PRIVATE ${JACK_LDFLAGS})
+target_sources(aeolus PRIVATE source/jack_audio.cc)
 
 # X11 && clxclient (optional, for GUI)
 pkg_check_modules(X11 x11)

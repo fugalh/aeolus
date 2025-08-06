@@ -277,7 +277,7 @@ void Imidi::proc_midi (void)
 	    break;
 
 	case SND_SEQ_EVENT_USR0:
-	    // User event, terminates this trhead if we sent it.
+	    // User event, terminates this thread if we sent it.
 	    if (E->source.client == _client) return;
 	}
     }

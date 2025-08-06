@@ -18,67 +18,98 @@
 // ----------------------------------------------------------------------------
 
 
-#ifndef __AUDIO_H
-#define __AUDIO_H
+#ifndef __AUDIO_BACKEND_H
+#define __AUDIO_BACKEND_H
 
 
 #include <stdlib.h>
 #include <clthreads.h>
-#ifdef __linux__
-#include <zita-alsa-pcmi.h>
-#endif
-#include <jack/jack.h>
 #include "asection.h"
 #include "division.h"
 #include "lfqueue.h"
 #include "reverb.h"
 #include "global.h"
+#include "midi_processor.h"
 
 
-class Audio : public A_thread
+class AudioBackend : public A_thread, public MidiProcessor::Handler
 {
 public:
 
-    Audio (const char *jname, Lfq_u32 *qnote, Lfq_u32 *qcomm);
-    virtual ~Audio (void);
-#ifdef __linux__
-    void  init_alsa (const char *device, int fsamp, int fsize, int nfrag);
-#endif
-    void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
-    void  start (void);
+    AudioBackend (const char *appname, Lfq_u32 *qnote, Lfq_u32 *qcomm);
+    virtual ~AudioBackend (void);
+    
+    // Pure virtual methods - must be implemented by subclasses
+    virtual void start (void) = 0;
+    virtual int  relpri (void) const = 0;
 
+    // Common interface methods
     const char  *appname (void) const { return _appname; }
     uint16_t    *midimap (void) const { return (uint16_t *) _midimap; }
     int  policy (void) const { return _policy; }
     int  abspri (void) const { return _abspri; }
-    int  relpri (void) const { return _relpri; }
 
-private:
+    // MidiProcessor::Handler implementation
+    void key_on(int note, int keyboard) override;
+    void key_off(int note, int keyboard) override;
+    void all_sound_off() override;
+    void all_notes_off(int keyboard) override;
+    void hold_pedal(int keyboard, bool on) override;
+
+protected:
 
     enum { VOLUME, REVSIZE, REVTIME, STPOSIT };
 
+    // Common initialization shared by all backends
     void init_audio (void);
-#ifdef __linux__
-    void close_alsa (void);
-#endif
-    void close_jack (void);
-    virtual void thr_main (void);
-    void jack_shutdown (void);
-    int  jack_callback (jack_nframes_t);
-    void proc_jmidi (int);
+    
+    // Common audio processing methods - now MIDI-agnostic
     void proc_queue (Lfq_u32 *);
     void proc_synth (int);
     void proc_keys1 (void);
     void proc_keys2 (void);
     void proc_mesg (void);
 
-    void key_off (int i, int b)
+    // Virtual method for backend-specific MIDI processing during synthesis
+    virtual void proc_midi_during_synth (int frame_time) {}
+
+    // Common member variables
+    const char     *_appname;
+    uint16_t        _midimap [16];
+    Lfq_u32        *_qnote;
+    Lfq_u32        *_qcomm;
+    volatile bool   _running;
+    int             _policy;
+    int             _abspri;
+    int             _hold;
+    bool            _bform;
+    int             _nplay;
+    unsigned int    _fsamp;
+    unsigned int    _fsize;
+    int             _nasect;
+    int             _ndivis;
+    Asection       *_asectp [NASECT];
+    Division       *_divisp [NDIVIS];
+    Reverb          _reverb;
+    float          *_outbuf [8];
+    uint16_t        _keymap [NNOTES];
+    Fparm           _audiopar [4];
+    float           _revsize;
+    float           _revtime;
+
+    static const char *_ports_stereo [2];
+    static const char *_ports_ambis1 [4];
+
+private:
+
+    // Common key handling methods
+    void key_off_internal (int i, int b)
     {
         _keymap [i] &= ~b;
         _keymap [i] |= KMAP_SET;
     }
 
-    void key_on (int i, int b)
+    void key_on_internal (int i, int b)
     {
         _keymap [i] |= b | KMAP_SET;
     }
@@ -111,48 +142,7 @@ private:
             }
         }
     }
-
-    static void jack_static_shutdown (void *);
-    static int  jack_static_callback (jack_nframes_t, void *);
-
-    const char     *_appname;
-    uint16_t        _midimap [16];
-    Lfq_u32        *_qnote;
-    Lfq_u32        *_qcomm;
-    Lfq_u8         *_qmidi;
-    volatile bool   _running;
-#ifdef __linux__
-    Alsa_pcmi      *_alsa_handle;
-#endif
-    jack_client_t  *_jack_handle;
-    jack_port_t    *_jack_opport [8];
-    jack_port_t    *_jack_midipt;
-    int             _policy;
-    int             _abspri;
-    int             _relpri;
-    int             _jmidi_count;
-    int             _jmidi_index;
-    void           *_jmidi_pdata;
-    int             _hold;
-    bool            _bform;
-    int             _nplay;
-    unsigned int    _fsamp;
-    unsigned int    _fsize;
-    int             _nasect;
-    int             _ndivis;
-    Asection       *_asectp [NASECT];
-    Division       *_divisp [NDIVIS];
-    Reverb          _reverb;
-    float          *_outbuf [8];
-    uint16_t        _keymap [NNOTES];
-    Fparm           _audiopar [4];
-    float           _revsize;
-    float           _revtime;
-
-    static const char *_ports_stereo [2];
-    static const char *_ports_ambis1 [4];
 };
 
 
 #endif
-
