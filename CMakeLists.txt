@@ -107,6 +107,7 @@ if(BUILD_TESTS)
       tests/test_main.cc
       tests/test_audio_backend.cc
       tests/test_midi_processor.cc
+      tests/test_audio_processing.cc
   )
   
   # Add Aeolus source files needed for testing (without main.cc)
