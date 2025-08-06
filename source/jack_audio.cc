@@ -233,3 +233,10 @@ int JackAudio::jack_static_callback (jack_nframes_t nframes, void *arg)
 {
     return ((JackAudio *) arg)->jack_callback (nframes);
 }
+
+
+void JackAudio::thr_main (void)
+{
+    // JACK uses callback-based processing, no thread main needed
+    // This method should not be called for JACK backends
+}

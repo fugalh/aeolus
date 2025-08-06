@@ -12,6 +12,7 @@ target_sources(
   PRIVATE source/main.cc
           source/audio.cc
           source/audio_backend.cc
+          source/audio_factory.cc
           source/midi_backend.cc
           source/model.cc
           source/slave.cc

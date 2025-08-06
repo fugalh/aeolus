@@ -52,6 +52,7 @@ private:
     void jack_shutdown (void);
     int  jack_callback (jack_nframes_t);
     void proc_jmidi (int);
+    virtual void thr_main (void) override;
 
     static void jack_static_shutdown (void *);
     static int  jack_static_callback (jack_nframes_t, void *);
