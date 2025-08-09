@@ -23,10 +23,29 @@
 
 #include <curses.h>
 #include "iface.h"
+#include "model.h"
+
+// Forward declaration
+class Niface;
+
+class NITCHandler : public H_thread
+{
+public:
+
+    NITCHandler (Niface *niface);
+    virtual ~NITCHandler (void);
+
+private:
+
+    virtual void thr_main (void);
+    Niface *_niface;
+};
 
 
 class Niface : public Iface
 {
+    friend class NITCHandler;
+    
 public:
 
     Niface (int ac, char *av []);
@@ -52,6 +71,8 @@ private:
     void init_ncurses (void);
     void cleanup_ncurses (void);
     void handle_input (void);
+    void handle_input_msg (void);
+    void handle_key (int ch);
     void draw_screen (void);
     void draw_status (void);
     void draw_groups (void);
@@ -73,6 +94,7 @@ private:
     bool            _stop;
     bool            _init;
     bool            _command_mode;
+    bool            _need_redraw;
     M_ifc_init     *_initdata;
     M_ifc_chconf   *_mididata;
     uint32_t        _ifelms [NGROUP];
@@ -89,6 +111,9 @@ private:
     char            _tempstr [64];
     char            _command_buffer [256];
     int             _command_pos;
+    
+    // ITC event handling
+    NITCHandler     *_itc_handler;
 };
 
 
