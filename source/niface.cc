@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include "niface.h"
 
 
@@ -72,6 +73,7 @@ void NITCHandler::thr_main (void)
 Niface::Niface (int ac, char *av []) :
     _stop (false),
     _init (true),
+    _ready (false),
     _command_mode (false),
     _need_redraw (false),
     _initdata (0),
@@ -85,6 +87,10 @@ Niface::Niface (int ac, char *av []) :
     _groups_per_row (1),
     _group_width (20),
     _command_pos (0),
+    _has_tuning_stop (false),
+    _tuning_group (0),
+    _tuning_ifelm (0),
+    _tuning_blink_state (false),
     _itc_handler (0)
 {
     int i;
@@ -171,6 +177,9 @@ void Niface::thr_main (void)
     _itc_handler->thr_start (SCHED_OTHER, 0, 0);
     
     // Main NCurses loop - handle input and display only
+    struct timeval last_blink = {0, 0};
+    gettimeofday (&last_blink, nullptr);
+    
     while (! _stop)
     {
         // Handle keyboard input - non-blocking
@@ -182,15 +191,31 @@ void Niface::thr_main (void)
             had_input = true;
         }
         
-        // Redraw screen after input or when messages request it
-        if (had_input || _need_redraw)
+        // Handle tuning blink timing (~4Hz like GUI)
+        bool blink_update = false;
+        if (_has_tuning_stop)
+        {
+            struct timeval now;
+            gettimeofday (&now, nullptr);
+            long elapsed_ms = (now.tv_sec - last_blink.tv_sec) * 1000 + 
+                             (now.tv_usec - last_blink.tv_usec) / 1000;
+            if (elapsed_ms >= 250) // 250ms = 4Hz blink rate
+            {
+                _tuning_blink_state = !_tuning_blink_state;
+                blink_update = true;
+                last_blink = now;
+            }
+        }
+        
+        // Redraw screen after input, messages, or blink updates
+        if (had_input || _need_redraw || blink_update)
         {
             _need_redraw = false;
             draw_screen ();
         }
         
         // Small sleep to prevent excessive CPU usage when no input
-        if (!had_input && !_need_redraw)
+        if (!had_input && !_need_redraw && !blink_update)
         {
             usleep (10000); // 10ms sleep
         }
@@ -405,6 +430,9 @@ void Niface::draw_groups (void)
         return;
     }
     
+    // Show normal display, but handle tuning overlay separately
+    // Don't return early - we want to show stops with tuning overlay
+    
     int row = 1, col = 1;
     int group_start_row = 2;
     
@@ -438,20 +466,27 @@ void Niface::draw_groups (void)
             // Check if this stop is pulled (active)
             bool is_pulled = (_ifelms[g] & (1 << i)) != 0;
             
+            // Check if this stop is currently being tuned
+            bool is_tuning = _has_tuning_stop && _tuning_group == g && _tuning_ifelm == i;
+            
             // Get stop color based on type
             int color_pair = get_stop_color (g, i);
             
-            // Apply highlighting for pulled stops
+            // Apply highlighting - tuning stops blink, pulled stops are reversed
             if (has_colors ())
             {
-                if (is_pulled)
+                if (is_tuning && _tuning_blink_state)
+                    wattron (_main_win, COLOR_PAIR(color_pair) | A_BLINK | A_BOLD);
+                else if (is_pulled)
                     wattron (_main_win, COLOR_PAIR(color_pair) | A_REVERSE | A_BOLD);
                 else
                     wattron (_main_win, COLOR_PAIR(color_pair));
             }
             else
             {
-                if (is_pulled)
+                if (is_tuning && _tuning_blink_state)
+                    wattron (_main_win, A_BLINK | A_BOLD);
+                else if (is_pulled)
                     wattron (_main_win, A_REVERSE | A_BOLD);
             }
             
@@ -463,14 +498,18 @@ void Niface::draw_groups (void)
             // Turn off attributes
             if (has_colors ())
             {
-                if (is_pulled)
+                if (is_tuning && _tuning_blink_state)
+                    wattroff (_main_win, COLOR_PAIR(color_pair) | A_BLINK | A_BOLD);
+                else if (is_pulled)
                     wattroff (_main_win, COLOR_PAIR(color_pair) | A_REVERSE | A_BOLD);
                 else
                     wattroff (_main_win, COLOR_PAIR(color_pair));
             }
             else
             {
-                if (is_pulled)
+                if (is_tuning && _tuning_blink_state)
+                    wattroff (_main_win, A_BLINK | A_BOLD);
+                else if (is_pulled)
                     wattroff (_main_win, A_REVERSE | A_BOLD);
             }
         }
@@ -497,6 +536,7 @@ void Niface::draw_cursor (void)
 }
 
 
+
 void Niface::draw_status (void)
 {
     if (_command_mode)
@@ -505,7 +545,40 @@ void Niface::draw_status (void)
     }
     else
     {
-        mvwprintw (_status_win, 0, 0, "Arrow keys:move, Space:toggle, 1-9:presets, /:command, Ctrl-D:quit");
+        // Always show the standard controls message on the left
+        if (!_ready)
+        {
+            mvwprintw (_status_win, 0, 0, "Arrow keys:move, Controls disabled - Ctrl-D:quit");
+        }
+        else
+        {
+            mvwprintw (_status_win, 0, 0, "Arrow keys:move, Space:toggle, 1-9:presets, /:command, Ctrl-D:quit");
+        }
+        
+        // Add tuning info on the right side when tuning - fixed width to prevent jumping
+        if (!_ready)
+        {
+            // Reserve fixed width for tuning message (30 characters)
+            int tuning_width = 30;
+            int tuning_pos = _max_cols - tuning_width;
+            if (tuning_pos < 65) tuning_pos = 65; // Don't overlap with controls message
+            
+            if (tuning_pos >= 0 && tuning_pos + tuning_width <= _max_cols)
+            {
+                if (_has_tuning_stop && _initdata && _tuning_group < _initdata->_ngroup &&
+                    _tuning_ifelm < _initdata->_groupd[_tuning_group]._nifelm)
+                {
+                    char stop_name[20]; // Truncate long stop names
+                    rewrite_label (_initdata->_groupd[_tuning_group]._ifelmd[_tuning_ifelm]._label, 
+                                  stop_name, sizeof(stop_name));
+                    mvwprintw (_status_win, 0, tuning_pos, "TUNING: %-18s", stop_name);
+                }
+                else
+                {
+                    mvwprintw (_status_win, 0, tuning_pos, "TUNING IN PROGRESS        ");
+                }
+            }
+        }
     }
 }
 
@@ -568,6 +641,9 @@ void Niface::toggle_current_stop (void)
     if (!_initdata || _cursor_group >= _initdata->_ngroup) return;
     if (_cursor_ifelm >= _initdata->_groupd[_cursor_group]._nifelm) return;
     
+    // Don't allow stop changes until organ is ready
+    if (!_ready) return;
+    
     // Send button toggle message to model
     M_ifc_ifelm *M = new M_ifc_ifelm (MT_IFC_ELXOR, _cursor_group, _cursor_ifelm);
     send_event (TO_MODEL, M);
@@ -577,6 +653,9 @@ void Niface::toggle_current_stop (void)
 void Niface::recall_preset (int preset)
 {
     if (preset < 1 || preset > 9) return;
+    
+    // Don't allow presets until organ is ready
+    if (!_ready) return;
     
     // Send preset recall message to model
     M_ifc_preset *M = new M_ifc_preset (MT_IFC_PRRCL, 0, preset - 1, 0, 0);
@@ -588,6 +667,9 @@ void Niface::store_preset (int preset)
 {
     if (preset < 1 || preset > 9) return;
     
+    // Don't allow presets until organ is ready
+    if (!_ready) return;
+    
     // Send preset store message to model - need current state bits
     // For now, just send with null bits - model will handle current state
     M_ifc_preset *M = new M_ifc_preset (MT_IFC_PRSTO, 0, preset - 1, 0, 0);
@@ -598,6 +680,9 @@ void Niface::store_preset (int preset)
 void Niface::general_cancel (void)
 {
     if (!_initdata) return;
+    
+    // Don't allow general cancel until organ is ready
+    if (!_ready) return;
     
     // Send clear group message for each group to push all stops
     for (int g = 0; g < _initdata->_ngroup; g++)
@@ -673,6 +758,9 @@ void Niface::handle_ifc_ready (void)
         // Interface is now ready for input
     }
     _init = false;
+    _ready = true;
+    _has_tuning_stop = false;  // Clear tuning stop when ready
+    _need_redraw = true;
 }
 
 
@@ -692,7 +780,9 @@ void Niface::handle_ifc_mcset (M_ifc_chconf *M)
 
 void Niface::handle_ifc_retune (M_ifc_retune *M)
 {
-    // TODO: Show retuning message in status
+    // Show retuning message - means we're not ready yet
+    _ready = false;
+    _need_redraw = true;
 }
 
 
@@ -719,7 +809,11 @@ void Niface::handle_ifc_elset (M_ifc_ifelm *M)
 
 void Niface::handle_ifc_elatt (M_ifc_ifelm *M)
 {
-    // TODO: Handle element attachment (retuning)
+    // Handle element attachment (retuning) - this stop is being tuned
+    _has_tuning_stop = true;
+    _tuning_group = M->_group;
+    _tuning_ifelm = M->_ifelm;
+    _tuning_blink_state = true;
     _need_redraw = true;
 }
 

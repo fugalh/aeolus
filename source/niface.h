@@ -93,6 +93,7 @@ private:
 
     bool            _stop;
     bool            _init;
+    bool            _ready;
     bool            _command_mode;
     bool            _need_redraw;
     M_ifc_init     *_initdata;
@@ -111,6 +112,12 @@ private:
     char            _tempstr [64];
     char            _command_buffer [256];
     int             _command_pos;
+    
+    // Tuning state
+    bool            _has_tuning_stop;
+    int             _tuning_group;
+    int             _tuning_ifelm;
+    bool            _tuning_blink_state;
     
     // ITC event handling
     NITCHandler     *_itc_handler;
