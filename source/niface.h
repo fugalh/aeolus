@@ -99,6 +99,9 @@ private:
     void store_preset (int preset);
     void general_cancel (void);
     void enter_command_mode (void);
+    void enter_midi_dialog (void);
+    void draw_midi_dialog (WINDOW *win, int cursor_row, int cursor_col, int cursor_section);
+    void toggle_midi_assignment (int row, int channel, int section);
     
     // Layout and display helpers
     void calculate_layout (void);

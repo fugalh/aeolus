@@ -426,6 +426,10 @@ void Niface::handle_key (int ch)
                     send_event (EV_EXIT, 1);
                     return;
                 }
+                else if (strcmp (_command_buffer, "midi") == 0)
+                {
+                    enter_midi_dialog();
+                }
             }
             _command_mode = false;
             _command_pos = 0;
@@ -467,6 +471,11 @@ void Niface::handle_key (int ch)
         
     case '/':
         enter_command_mode ();
+        break;
+        
+    case 'm':
+    case 'M':
+        enter_midi_dialog ();
         break;
         
     case KEY_UP:
@@ -518,6 +527,367 @@ void Niface::enter_command_mode (void)
     _command_pos = 0;
     _command_buffer[0] = 0;
     draw_screen ();
+}
+
+
+void Niface::enter_midi_dialog (void)
+{
+    if (!_mididata || !_initdata) return;
+    
+    WINDOW *dialog_win = nullptr;
+    bool done = false;
+    
+    // Cursor state for MIDI dialog
+    int cursor_row = 0;    // Which keyboard/division/control row
+    int cursor_col = 0;    // Which MIDI channel (0-15)
+    int cursor_section = 0; // 0=keyboards, 1=divisions, 2=control
+    int total_keyboard_rows = 0;
+    int total_division_rows = 0;
+    
+    auto create_dialog = [&]() {
+        if (dialog_win) {
+            delwin(dialog_win);
+        }
+        // Create dialog window overlay - ensure it fits properly in terminal
+        int dialog_rows = _max_rows - 4; // Leave space for borders
+        int dialog_cols = _max_cols - 6;  // Leave space for borders
+        
+        // Apply minimum size only if terminal is large enough
+        int min_rows = 15;
+        int min_cols = 70;
+        
+        if (dialog_rows < min_rows && _max_rows >= min_rows + 4) {
+            dialog_rows = min_rows;
+        }
+        if (dialog_cols < min_cols && _max_cols >= min_cols + 6) {
+            dialog_cols = min_cols;
+        }
+        
+        // Final safety check - never exceed terminal bounds
+        if (dialog_rows > _max_rows - 2) dialog_rows = _max_rows - 2;
+        if (dialog_cols > _max_cols - 4) dialog_cols = _max_cols - 4;
+        
+        // Center the dialog
+        int start_row = (_max_rows - dialog_rows) / 2;
+        int start_col = (_max_cols - dialog_cols) / 2;
+        
+        // Clear the screen first to remove old dialog remnants
+        clear();
+        refresh();
+        
+        dialog_win = newwin(dialog_rows, dialog_cols, start_row, start_col);
+        if (dialog_win) {
+            draw_midi_dialog(dialog_win, cursor_row, cursor_col, cursor_section);
+        }
+    };
+    
+    // Count available rows for cursor navigation
+    for (int k = 0; k < NKEYBD; k++) {
+        if (_initdata->_keybdd[k]._label[0]) total_keyboard_rows++;
+    }
+    for (int k = 0; k < NDIVIS; k++) {
+        if (_initdata->_divisd[k]._label[0] && (_initdata->_divisd[k]._flags & 1)) {
+            total_division_rows++; // Only count divisions with swell pedals (HAS_SWELL = 1)
+        }
+    }
+    
+    create_dialog();
+    if (!dialog_win) return;
+    
+    // Handle input until user exits - use same event system as main loop
+    while (!done) {
+        // Check for resize
+        if (resize_flag.exchange(false)) {
+            handle_resize_from_signal();
+            create_dialog(); // Recreate dialog with new size
+            continue;
+        }
+        
+        // Use same event system as main loop
+        int event = get_event_timed();
+        switch (event) {
+        case EV_INPUT:
+            {
+                int ch = getch();
+                if (ch != ERR) {
+                    switch (ch) {
+                    case 'q':
+                    case 'Q':
+                    case 4:   // Ctrl-D
+                        done = true;
+                        break;
+                    case KEY_UP:
+                        if (cursor_section == 0 && cursor_row > 0) {
+                            cursor_row--;
+                        } else if (cursor_section == 1 && cursor_row > 0) {
+                            cursor_row--;
+                        } else if (cursor_section == 2) {
+                            // Move from control to divisions
+                            cursor_section = 1;
+                            cursor_row = total_division_rows > 0 ? total_division_rows - 1 : 0;
+                        } else if (cursor_section == 1 && cursor_row == 0) {
+                            // Move from divisions to keyboards
+                            cursor_section = 0;
+                            cursor_row = total_keyboard_rows > 0 ? total_keyboard_rows - 1 : 0;
+                        }
+                        draw_midi_dialog(dialog_win, cursor_row, cursor_col, cursor_section);
+                        break;
+                    case KEY_DOWN:
+                        if (cursor_section == 0) {
+                            if (cursor_row < total_keyboard_rows - 1) {
+                                cursor_row++;
+                            } else {
+                                // Move to divisions
+                                cursor_section = 1;
+                                cursor_row = 0;
+                            }
+                        } else if (cursor_section == 1) {
+                            if (cursor_row < total_division_rows - 1) {
+                                cursor_row++;
+                            } else {
+                                // Move to control
+                                cursor_section = 2;
+                                cursor_row = 0;
+                            }
+                        }
+                        draw_midi_dialog(dialog_win, cursor_row, cursor_col, cursor_section);
+                        break;
+                    case KEY_LEFT:
+                        if (cursor_col > 0) {
+                            cursor_col--;
+                            draw_midi_dialog(dialog_win, cursor_row, cursor_col, cursor_section);
+                        }
+                        break;
+                    case KEY_RIGHT:
+                        if (cursor_col < 15) {
+                            cursor_col++;
+                            draw_midi_dialog(dialog_win, cursor_row, cursor_col, cursor_section);
+                        }
+                        break;
+                    case ' ':
+                        // Toggle MIDI channel assignment
+                        toggle_midi_assignment(cursor_row, cursor_col, cursor_section);
+                        draw_midi_dialog(dialog_win, cursor_row, cursor_col, cursor_section);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+            break;
+        case EV_TIME:
+            // Ignore timer events in dialog
+            break;
+        case FM_MODEL:
+            // Handle model messages to keep system responsive
+            handle_mesg(get_message());
+            break;
+        default:
+            break;
+        }
+    }
+    
+    // Clean up immediately after loop
+    if (dialog_win) {
+        delwin(dialog_win);
+    }
+    draw_screen();
+}
+
+
+void Niface::draw_midi_dialog (WINDOW *win, int cursor_row, int cursor_col, int cursor_section)
+{
+    int rows, cols;
+    getmaxyx(win, rows, cols);
+    
+    // Clear and draw border
+    werase(win);
+    box(win, 0, 0);
+    
+    // Title
+    mvwprintw(win, 0, (cols - 15) / 2, " MIDI Settings ");
+    
+    // Channel header - start at column 14, with 3-char spacing per channel
+    int header_start = 14;
+    mvwprintw(win, 1, header_start, " 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16");
+    
+    int row = 2;
+    
+    // Keyboards section
+    mvwprintw(win, row++, 2, "Keyboards");
+    int keyboard_row_index = 0;
+    for (int k = 0; k < NKEYBD; k++) {
+        if (_initdata->_keybdd[k]._label[0]) {
+            mvwprintw(win, row, 4, "%-8s", _initdata->_keybdd[k]._label);
+            
+            // Show assigned channels for this keyboard  
+            for (int i = 0; i < 16; i++) {
+                bool is_cursor = (cursor_section == 0 && cursor_row == keyboard_row_index && cursor_col == i);
+                uint16_t b = _mididata->_bits[i];
+                bool is_assigned = (b & 0x1000) && ((b & 7) == k);
+                
+                if (is_cursor) {
+                    wattron(win, A_REVERSE); // Cursor - just reverse video
+                } else if (is_assigned) {
+                    if (has_colors()) wattron(win, COLOR_PAIR(2)); // Yellow for assigned
+                }
+                
+                if (is_assigned) {
+                    mvwprintw(win, row, header_start + i * 3, "%2d", i + 1);
+                } else if (is_cursor) {
+                    mvwprintw(win, row, header_start + i * 3, "  ");
+                }
+                
+                if (is_cursor) {
+                    wattroff(win, A_REVERSE);
+                } else if (is_assigned) {
+                    if (has_colors()) wattroff(win, COLOR_PAIR(2));
+                }
+            }
+            row++;
+            keyboard_row_index++;
+        }
+    }
+    
+    row += 1; // Spacing
+    
+    // Divisions section  
+    mvwprintw(win, row++, 2, "Divisions");
+    int division_row_index = 0;
+    for (int k = 0; k < NDIVIS; k++) {
+        if (_initdata->_divisd[k]._label[0] && (_initdata->_divisd[k]._flags & 1)) { // Only show divisions with swell pedals
+            mvwprintw(win, row, 4, "%-8s", _initdata->_divisd[k]._label);
+            
+            // Show assigned channels for this division
+            for (int i = 0; i < 16; i++) {
+                bool is_cursor = (cursor_section == 1 && cursor_row == division_row_index && cursor_col == i);
+                uint16_t b = _mididata->_bits[i];
+                bool is_assigned = (b & 0x2000) && (((b >> 8) & 7) == k);
+                
+                if (is_cursor) {
+                    wattron(win, A_REVERSE); // Cursor - just reverse video
+                } else if (is_assigned) {
+                    if (has_colors()) wattron(win, COLOR_PAIR(2)); // Yellow for assigned
+                }
+                
+                if (is_assigned) {
+                    mvwprintw(win, row, header_start + i * 3, "%2d", i + 1);
+                } else if (is_cursor) {
+                    mvwprintw(win, row, header_start + i * 3, "  ");
+                }
+                
+                if (is_cursor) {
+                    wattroff(win, A_REVERSE);
+                } else if (is_assigned) {
+                    if (has_colors()) wattroff(win, COLOR_PAIR(2));
+                }
+            }
+            row++;
+            division_row_index++;
+        }
+    }
+    
+    row += 1; // Spacing
+    
+    // Control section
+    mvwprintw(win, row++, 2, "Control");
+    mvwprintw(win, row, 4, "%-8s", "Control");
+    
+    // Show control channel (instrument control)
+    for (int i = 0; i < 16; i++) {
+        bool is_cursor = (cursor_section == 2 && cursor_col == i);
+        uint16_t b = _mididata->_bits[i];
+        bool is_assigned = (b & 0x4000); // Control/instrument bit
+        
+        if (is_cursor) {
+            wattron(win, A_REVERSE); // Cursor - just reverse video
+        } else if (is_assigned) {
+            if (has_colors()) wattron(win, COLOR_PAIR(2)); // Yellow for assigned
+        }
+        
+        if (is_assigned) {
+            mvwprintw(win, row, header_start + i * 3, "%2d", i + 1);
+        } else if (is_cursor) {
+            mvwprintw(win, row, header_start + i * 3, "  ");
+        }
+        
+        if (is_cursor) {
+            wattroff(win, A_REVERSE);
+        } else if (is_assigned) {
+            if (has_colors()) wattroff(win, COLOR_PAIR(2));
+        }
+    }
+    
+    // Instructions at bottom
+    mvwprintw(win, rows - 2, 2, "Arrow keys: move, Space: toggle, Q/Ctrl-D: exit");
+    
+    wrefresh(win);
+}
+
+
+void Niface::toggle_midi_assignment (int row, int channel, int section)
+{
+    if (!_mididata || channel < 0 || channel > 15) return;
+    
+    uint16_t *bits = &_mididata->_bits[channel];
+    
+    if (section == 0) { // Keyboards
+        // Find which keyboard this row represents
+        int keyboard_index = 0;
+        int target_keyboard = -1;
+        for (int k = 0; k < NKEYBD; k++) {
+            if (_initdata->_keybdd[k]._label[0]) {
+                if (keyboard_index == row) {
+                    target_keyboard = k;
+                    break;
+                }
+                keyboard_index++;
+            }
+        }
+        if (target_keyboard == -1) return;
+        
+        // Toggle keyboard assignment
+        if ((*bits & 0x1000) && ((*bits & 7) == target_keyboard)) {
+            // Currently assigned to this keyboard - remove it
+            *bits &= ~0x1000;
+            *bits &= ~7;
+        } else {
+            // Not assigned or assigned to different keyboard - assign to this one
+            *bits |= 0x1000;
+            *bits = (*bits & ~7) | target_keyboard;
+        }
+    } else if (section == 1) { // Divisions
+        // Find which division this row represents
+        int division_index = 0;
+        int target_division = -1;
+        for (int k = 0; k < NDIVIS; k++) {
+            if (_initdata->_divisd[k]._label[0] && (_initdata->_divisd[k]._flags & 1)) { // Only divisions with swell pedals
+                if (division_index == row) {
+                    target_division = k;
+                    break;
+                }
+                division_index++;
+            }
+        }
+        if (target_division == -1) return;
+        
+        // Toggle division assignment
+        if ((*bits & 0x2000) && (((*bits >> 8) & 7) == target_division)) {
+            // Currently assigned to this division - remove it
+            *bits &= ~0x2000;
+            *bits &= ~(7 << 8);
+        } else {
+            // Not assigned or assigned to different division - assign to this one
+            *bits |= 0x2000;
+            *bits = (*bits & ~(7 << 8)) | (target_division << 8);
+        }
+    } else if (section == 2) { // Control
+        // Toggle control assignment
+        *bits ^= 0x4000;
+    }
+    
+    // Send the updated MIDI configuration to the model
+    send_event(TO_MODEL, new M_ifc_chconf(MT_IFC_MCSET, -1, _mididata->_bits));
 }
 
 
