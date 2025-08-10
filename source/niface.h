@@ -28,6 +28,19 @@
 // Forward declaration
 class Niface;
 
+class NInputHandler : public H_thread
+{
+public:
+
+    NInputHandler (Niface *niface);
+    virtual ~NInputHandler (void);
+
+private:
+
+    virtual void thr_main (void);
+    Niface *_niface;
+};
+
 class NITCHandler : public H_thread
 {
 public:
@@ -45,6 +58,7 @@ private:
 class Niface : public Iface
 {
     friend class NITCHandler;
+    friend class NInputHandler;
     
 public:
 
@@ -68,12 +82,13 @@ private:
     void handle_ifc_elatt (M_ifc_ifelm *);
 
     // NCurses specific methods
-    void init_ncurses (void);
+    void init_ncurses_only (void);
     void cleanup_ncurses (void);
     void handle_input (void);
     void handle_input_msg (void);
     void handle_key (int ch);
     void draw_screen (void);
+    void draw_initial_screen (void);
     void draw_status (void);
     void draw_groups (void);
     void draw_cursor (void);
@@ -121,6 +136,7 @@ private:
     
     // ITC event handling
     NITCHandler     *_itc_handler;
+    NInputHandler   *_input_handler;
 };
 
 

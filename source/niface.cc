@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/select.h>
+#include <errno.h>
 #include "niface.h"
 
 
@@ -36,8 +38,49 @@ extern "C" Iface *create_iface (int ac, char *av [])
 #endif
 
 
+NInputHandler::NInputHandler (Niface *niface) :
+    H_thread (niface, EV_INPUT),
+    _niface (niface)
+{
+}
+
+
+NInputHandler::~NInputHandler (void)
+{
+}
+
+
+void NInputHandler::thr_main (void)
+{
+    // This thread handles keyboard input using select() to avoid polling
+    fd_set readfds;
+    int stdin_fd = STDIN_FILENO;
+    
+    while (!_niface->_stop)
+    {
+        FD_ZERO(&readfds);
+        FD_SET(stdin_fd, &readfds);
+        
+        // Block waiting for input on stdin
+        int result = select(stdin_fd + 1, &readfds, nullptr, nullptr, nullptr);
+        
+        if (result < 0)
+        {
+            if (errno == EINTR) continue;  // Interrupted by signal, retry
+            break;  // Error occurred
+        }
+        
+        if (result > 0 && FD_ISSET(stdin_fd, &readfds))
+        {
+            // Input is available, signal the main thread
+            reply();  // Send EV_INPUT event to main thread
+        }
+    }
+}
+
+
 NITCHandler::NITCHandler (Niface *niface) :
-    H_thread (niface, EV_EXIT),
+    H_thread (niface, EV_REDRAW),
     _niface (niface)
 {
 }
@@ -60,6 +103,8 @@ void NITCHandler::thr_main (void)
         {
         case FM_MODEL:
             _niface->handle_mesg (_niface->get_message ());
+            // Wake up main thread to check for redraws
+            reply();
             break;
 
         case EV_EXIT:
@@ -91,17 +136,22 @@ Niface::Niface (int ac, char *av []) :
     _tuning_group (0),
     _tuning_ifelm (0),
     _tuning_blink_state (false),
-    _itc_handler (0)
+    _itc_handler (0),
+    _input_handler (0)
 {
     int i;
 
     for (i = 0; i < NGROUP; i++) _ifelms [i] = 0;
     _command_buffer[0] = 0;
     
-    // Create ITC handler thread
-    _itc_handler = new NITCHandler (this);
+    // No separate ITC handler thread - main thread handles model events directly
+    _itc_handler = nullptr;
     
-    init_ncurses ();
+    // Create input handler thread (start it later in thr_main)
+    _input_handler = new NInputHandler (this);
+    
+    // Initialize ncurses but don't draw anything yet
+    init_ncurses_only ();
 }
 
 
@@ -109,6 +159,7 @@ Niface::~Niface (void)
 {
     cleanup_ncurses ();
     if (_itc_handler) delete _itc_handler;
+    if (_input_handler) delete _input_handler;
 }
 
 
@@ -118,7 +169,7 @@ void Niface::stop (void)
 }
 
 
-void Niface::init_ncurses (void)
+void Niface::init_ncurses_only (void)
 {
     // Initialize ncurses
     initscr ();
@@ -158,8 +209,8 @@ void Niface::init_ncurses (void)
     signal (SIGINT, SIG_IGN);
     signal (SIGTERM, SIG_IGN);
     
-    // Show initial interface immediately
-    draw_screen ();
+    // Show initial loading screen
+    draw_initial_screen ();
 }
 
 
@@ -173,51 +224,70 @@ void Niface::cleanup_ncurses (void)
 
 void Niface::thr_main (void)
 {
-    // Start the ITC handler thread
-    _itc_handler->thr_start (SCHED_OTHER, 0, 0);
+    // No separate ITC handler thread - we handle model events directly
     
-    // Main NCurses loop - handle input and display only
+    // Start the input handler thread  
+    _input_handler->thr_start (SCHED_OTHER, 0, 0);
+    
+    // Set up timing for tuning blink (~4Hz like GUI)
+    set_time (0);
+    inc_time (250000); // 250ms = 4Hz blink rate
+    
     struct timeval last_blink = {0, 0};
     gettimeofday (&last_blink, nullptr);
     
     while (! _stop)
     {
-        // Handle keyboard input - non-blocking
-        int ch = getch ();
-        bool had_input = false;
-        if (ch != ERR)
-        {
-            handle_key (ch);
-            had_input = true;
-        }
+        // Block waiting for events - input, messages, or timer
+        int event = get_event_timed ();
+        bool had_event = false;
+        bool need_blink_update = false;
         
-        // Handle tuning blink timing (~4Hz like GUI)
-        bool blink_update = false;
-        if (_has_tuning_stop)
+        switch (event)
         {
-            struct timeval now;
-            gettimeofday (&now, nullptr);
-            long elapsed_ms = (now.tv_sec - last_blink.tv_sec) * 1000 + 
-                             (now.tv_usec - last_blink.tv_usec) / 1000;
-            if (elapsed_ms >= 250) // 250ms = 4Hz blink rate
+        case EV_INPUT:
+            // Input is available, read it non-blocking
+            {
+                int ch = getch ();
+                if (ch != ERR)
+                {
+                    handle_key (ch);
+                    had_event = true;
+                }
+            }
+            break;
+            
+        case FM_MODEL:
+            // Model message arrived, process it directly
+            handle_mesg (get_message ());
+            had_event = true;
+            break;
+            
+        case EV_TIME:
+            // Timer event for tuning blink
+            if (_has_tuning_stop)
             {
                 _tuning_blink_state = !_tuning_blink_state;
-                blink_update = true;
-                last_blink = now;
+                need_blink_update = true;
             }
+            // Reset timer for next blink
+            inc_time (250000);
+            break;
+            
+        case EV_EXIT:
+            _stop = true;
+            break;
+            
+        default:
+            // No event or other event, continue
+            break;
         }
         
-        // Redraw screen after input, messages, or blink updates
-        if (had_input || _need_redraw || blink_update)
+        // Always check if screen needs redrawing (could be set by NITCHandler)
+        if (had_event || _need_redraw || need_blink_update)
         {
             _need_redraw = false;
             draw_screen ();
-        }
-        
-        // Small sleep to prevent excessive CPU usage when no input
-        if (!had_input && !_need_redraw && !blink_update)
-        {
-            usleep (10000); // 10ms sleep
         }
     }
 }
@@ -391,6 +461,10 @@ void Niface::draw_screen (void)
 {
     if (!_main_win || !_status_win) return;
     
+    // Clear the entire screen first to remove any stray output
+    clear ();
+    refresh ();
+    
     // Always check current screen dimensions before drawing
     int current_rows, current_cols;
     getmaxyx (stdscr, current_rows, current_cols);
@@ -417,6 +491,26 @@ void Niface::draw_screen (void)
     
     wrefresh (_main_win);
     wrefresh (_status_win);
+}
+
+
+void Niface::draw_initial_screen (void)
+{
+    if (!_main_win || !_status_win) return;
+    
+    // Clear everything
+    clear ();
+    werase (_main_win);
+    werase (_status_win);
+    
+    // Show simple loading message
+    mvwprintw (_main_win, 0, 1, "Aeolus NCurses Interface");
+    mvwprintw (_main_win, 2, 1, "Loading instrument data...");
+    mvwprintw (_status_win, 0, 0, "Arrow keys:move, Controls disabled - Ctrl-D:quit");
+    
+    wrefresh (_main_win);
+    wrefresh (_status_win);
+    refresh ();
 }
 
 
@@ -555,8 +649,8 @@ void Niface::draw_status (void)
             mvwprintw (_status_win, 0, 0, "Arrow keys:move, Space:toggle, 1-9:presets, /:command, Ctrl-D:quit");
         }
         
-        // Add tuning info on the right side when tuning - fixed width to prevent jumping
-        if (!_ready)
+        // Add tuning info on the right side when actually tuning - fixed width to prevent jumping
+        if (_has_tuning_stop)
         {
             // Reserve fixed width for tuning message (30 characters)
             int tuning_width = 30;
@@ -565,7 +659,7 @@ void Niface::draw_status (void)
             
             if (tuning_pos >= 0 && tuning_pos + tuning_width <= _max_cols)
             {
-                if (_has_tuning_stop && _initdata && _tuning_group < _initdata->_ngroup &&
+                if (_initdata && _tuning_group < _initdata->_ngroup &&
                     _tuning_ifelm < _initdata->_groupd[_tuning_group]._nifelm)
                 {
                     char stop_name[20]; // Truncate long stop names
@@ -749,14 +843,6 @@ void Niface::handle_mesg (ITC_mesg *M)
 
 void Niface::handle_ifc_ready (void)
 {
-    if (_init)
-    {
-        // Don't recalculate layout - keep the one we already established
-        // Just trigger redraw with the new instrument data
-        _need_redraw = true;
-        
-        // Interface is now ready for input
-    }
     _init = false;
     _ready = true;
     _has_tuning_stop = false;  // Clear tuning stop when ready
@@ -768,6 +854,7 @@ void Niface::handle_ifc_init (M_ifc_init *M)
 {
     if (_initdata) _initdata->recover ();
     _initdata = M;
+    _need_redraw = true;
 }
 
 
@@ -884,3 +971,65 @@ void Niface::get_stop_position (int group, int ifelm, int *y, int *x)
     *y = group_row + 1 + ifelm; // +1 for group header
     *x = group_col + 1; // +1 to align with stop text
 }
+
+/*
+ * NCurses Terminal Interface Threading Architecture
+ * =================================================
+ *
+ * This implementation uses a clean event-driven architecture to eliminate
+ * CPU-intensive polling while ensuring thread-safe ncurses operations.
+ *
+ * Threading Model:
+ * ---------------
+ *
+ * 1. MAIN THREAD (Niface::thr_main):
+ *    - The ONLY thread that performs ncurses drawing operations
+ *    - Blocks on get_event_timed() waiting for events
+ *    - Handles ALL UI events in a single event loop:
+ *      * EV_INPUT: Keyboard input available
+ *      * FM_MODEL: Model state changes (organ initialization, stop changes, etc.)
+ *      * EV_TIME: Timer events for tuning blink animation
+ *      * EV_EXIT: Shutdown signal
+ *    - Processes message handlers that set _need_redraw flag
+ *    - Performs screen updates atomically after processing events
+ *
+ * 2. INPUT HANDLER THREAD (NInputHandler::thr_main):
+ *    - Uses select() to block waiting for keyboard input on stdin
+ *    - When input is available, sends EV_INPUT event to main thread via reply()
+ *    - Never touches ncurses directly - only signals input availability
+ *    - Eliminates need for polling getch() with nodelay()
+ *
+ * Message Flow:
+ * ------------
+ *
+ * Keyboard Input:
+ *   stdin -> select() -> NInputHandler -> EV_INPUT -> Main Thread -> getch() -> handle_key()
+ *
+ * Model Updates:
+ *   Model -> FM_MODEL -> Main Thread -> handle_mesg() -> sets _need_redraw -> draw_screen()
+ *
+ * Timer Events:
+ *   ITC Timer -> EV_TIME -> Main Thread -> tuning blink logic -> draw_screen()
+ *
+ * Key Benefits:
+ * ------------
+ *
+ * 1. THREAD SAFETY: All ncurses calls happen in main thread only
+ * 2. NO POLLING: select() and get_event_timed() block efficiently
+ * 3. NO RACE CONDITIONS: Model messages processed directly by main thread
+ * 4. RESPONSIVE: Input and model updates wake main thread immediately
+ * 5. CPU EFFICIENT: No usleep() or busy loops
+ *
+ * Event Processing Pattern:
+ * ------------------------
+ *
+ * The main thread follows this pattern:
+ *   1. Block waiting for event via get_event_timed()
+ *   2. Process the specific event type
+ *   3. Check if _need_redraw flag was set by message handlers
+ *   4. If any changes occurred, call draw_screen() to update display
+ *   5. Return to blocking wait
+ *
+ * This ensures the screen is always up-to-date with minimal CPU usage and
+ * maximum responsiveness to both user input and system state changes.
+ */

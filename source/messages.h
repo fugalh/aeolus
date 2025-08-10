@@ -44,6 +44,8 @@ enum
     EV_RLINE = 0,
     EV_XWIN  = 16,
     EV_QMIDI = 24,
+    EV_REDRAW = 28,
+    EV_INPUT = 29, 
     EV_SYNC  = 30,
     EV_EXIT  = 31
 };
