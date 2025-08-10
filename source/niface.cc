@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
+#include <unistd.h>
 #include "niface.h"
 
 
@@ -131,7 +132,7 @@ void Niface::init_ncurses (void)
     cbreak ();       // Disable line buffering
     noecho ();       // Don't echo input
     keypad (stdscr, TRUE);  // Enable function keys
-    nodelay (stdscr, FALSE); // Enable blocking getch()
+    nodelay (stdscr, TRUE);  // Enable non-blocking getch()
     // No timeout needed for blocking input
     curs_set (0);    // Hide cursor
     
@@ -172,19 +173,27 @@ void Niface::thr_main (void)
     // Main NCurses loop - handle input and display only
     while (! _stop)
     {
-        // Handle keyboard input - this will block until a key is pressed
+        // Handle keyboard input - non-blocking
         int ch = getch ();
+        bool had_input = false;
         if (ch != ERR)
         {
             handle_key (ch);
+            had_input = true;
         }
         
-        // Redraw screen after input or when needed
-        if (_need_redraw)
+        // Redraw screen after input or when messages request it
+        if (had_input || _need_redraw)
         {
             _need_redraw = false;
+            draw_screen ();
         }
-        draw_screen ();
+        
+        // Small sleep to prevent excessive CPU usage when no input
+        if (!had_input && !_need_redraw)
+        {
+            usleep (10000); // 10ms sleep
+        }
     }
 }
 
@@ -562,8 +571,6 @@ void Niface::toggle_current_stop (void)
     // Send button toggle message to model
     M_ifc_ifelm *M = new M_ifc_ifelm (MT_IFC_ELXOR, _cursor_group, _cursor_ifelm);
     send_event (TO_MODEL, M);
-    
-    draw_screen ();
 }
 
 
@@ -574,8 +581,6 @@ void Niface::recall_preset (int preset)
     // Send preset recall message to model
     M_ifc_preset *M = new M_ifc_preset (MT_IFC_PRRCL, 0, preset - 1, 0, 0);
     send_event (TO_MODEL, M);
-    
-    draw_screen ();
 }
 
 
@@ -587,14 +592,19 @@ void Niface::store_preset (int preset)
     // For now, just send with null bits - model will handle current state
     M_ifc_preset *M = new M_ifc_preset (MT_IFC_PRSTO, 0, preset - 1, 0, 0);
     send_event (TO_MODEL, M);
-    
-    draw_screen ();
 }
 
 
 void Niface::general_cancel (void)
 {
-    // TODO: Implement general cancel (push all stops)
+    if (!_initdata) return;
+    
+    // Send clear group message for each group to push all stops
+    for (int g = 0; g < _initdata->_ngroup; g++)
+    {
+        M_ifc_ifelm *M = new M_ifc_ifelm (MT_IFC_GRCLR, g, 0);
+        send_event (TO_MODEL, M);
+    }
 }
 
 
@@ -657,8 +667,8 @@ void Niface::handle_ifc_ready (void)
     if (_init)
     {
         // Don't recalculate layout - keep the one we already established
-        // Just redraw the screen with the new instrument data
-        draw_screen ();
+        // Just trigger redraw with the new instrument data
+        _need_redraw = true;
         
         // Interface is now ready for input
     }
@@ -689,7 +699,7 @@ void Niface::handle_ifc_retune (M_ifc_retune *M)
 void Niface::handle_ifc_grclr (M_ifc_ifelm *M)
 {
     _ifelms [M->_group] = 0;
-    draw_screen ();
+    _need_redraw = true;
 }
 
 
@@ -710,7 +720,7 @@ void Niface::handle_ifc_elset (M_ifc_ifelm *M)
 void Niface::handle_ifc_elatt (M_ifc_ifelm *M)
 {
     // TODO: Handle element attachment (retuning)
-    draw_screen ();
+    _need_redraw = true;
 }
 
 
