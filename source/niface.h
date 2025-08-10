@@ -87,6 +87,7 @@ private:
     void handle_input (void);
     void handle_input_msg (void);
     void handle_key (int ch);
+    void handle_resize_polling (void);
     void draw_screen (void);
     void draw_initial_screen (void);
     void draw_status (void);
@@ -98,7 +99,6 @@ private:
     void store_preset (int preset);
     void general_cancel (void);
     void enter_command_mode (void);
-    void handle_resize (void);
     
     // Layout and display helpers
     void calculate_layout (void);

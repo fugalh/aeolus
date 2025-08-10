@@ -26,8 +26,13 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
 #include <errno.h>
+
+
 #include "niface.h"
+
+
 
 
 #ifndef STATIC_UI
@@ -144,6 +149,7 @@ Niface::Niface (int ac, char *av []) :
     for (i = 0; i < NGROUP; i++) _ifelms [i] = 0;
     _command_buffer[0] = 0;
     
+    
     // No separate ITC handler thread - main thread handles model events directly
     _itc_handler = nullptr;
     
@@ -200,14 +206,14 @@ void Niface::init_ncurses_only (void)
     _main_win = newwin (_max_rows - 1, _max_cols, 0, 0);
     _status_win = newwin (1, _max_cols, _max_rows - 1, 0);
     
-    // Set reasonable defaults for layout before data arrives
-    _group_width = 24;  // Wider to accommodate full stop names
-    _groups_per_row = _max_cols / _group_width;
-    if (_groups_per_row < 1) _groups_per_row = 1;
+    // Calculate initial layout
+    calculate_layout ();
     
     // Set up signal handler for clean shutdown
     signal (SIGINT, SIG_IGN);
     signal (SIGTERM, SIG_IGN);
+    // Ignore SIGWINCH completely - use polling instead
+    signal (SIGWINCH, SIG_IGN);
     
     // Show initial loading screen
     draw_initial_screen ();
@@ -251,8 +257,15 @@ void Niface::thr_main (void)
                 int ch = getch ();
                 if (ch != ERR)
                 {
-                    handle_key (ch);
-                    had_event = true;
+                    if (ch == KEY_RESIZE)
+                    {
+                        // Ignore KEY_RESIZE - we handle resize via polling
+                    }
+                    else
+                    {
+                        handle_key (ch);
+                        had_event = true;
+                    }
                 }
             }
             break;
@@ -264,15 +277,20 @@ void Niface::thr_main (void)
             break;
             
         case EV_TIME:
-            // Timer event for tuning blink
+            // Timer event for tuning blink and resize detection
             if (_has_tuning_stop)
             {
                 _tuning_blink_state = !_tuning_blink_state;
                 need_blink_update = true;
             }
-            // Reset timer for next blink
+            
+            // Check for terminal resize by polling
+            handle_resize_polling();
+            
+            // Reset timer for next check
             inc_time (250000);
             break;
+            
             
         case EV_EXIT:
             _stop = true;
@@ -311,6 +329,40 @@ void Niface::handle_input_msg (void)
 }
 
 
+
+
+
+void Niface::handle_resize_polling (void)
+{
+    // Get actual terminal size using ioctl
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
+    {
+        int current_rows = ws.ws_row;
+        int current_cols = ws.ws_col;
+        
+        if (current_rows != _max_rows || current_cols != _max_cols)
+        {
+            // Tell ncurses about the new size
+            resizeterm(current_rows, current_cols);
+            
+            _max_rows = current_rows;
+            _max_cols = current_cols;
+            
+            // Resize our windows
+            if (_main_win) {
+                wresize (_main_win, _max_rows - 1, _max_cols);
+            }
+            if (_status_win) {
+                wresize (_status_win, 1, _max_cols);
+                mvwin (_status_win, _max_rows - 1, 0);
+            }
+            
+            calculate_layout();
+            _need_redraw = true;
+        }
+    }
+}
 
 
 void Niface::handle_key (int ch)
@@ -412,9 +464,6 @@ void Niface::handle_key (int ch)
         }
         break;
         
-    case KEY_RESIZE:
-        handle_resize ();
-        break;
     }
 }
 
@@ -428,32 +477,41 @@ void Niface::enter_command_mode (void)
 }
 
 
-void Niface::handle_resize (void)
-{
-    // The dynamic resize checking in draw_screen() should handle this
-    // Just force a screen redraw
-    draw_screen ();
-}
 
 
 void Niface::calculate_layout (void)
 {
-    // Calculate optimal group layout based on screen size
-    _group_width = 24;  // Each group needs about 24 characters for full stop names
-    _groups_per_row = _max_cols / _group_width;
-    if (_groups_per_row < 1) _groups_per_row = 1;
-    
-    // If we have init data, refine the layout based on actual group count
-    if (_initdata)
+    if (_max_cols < 25) 
     {
-        // Ensure we don't exceed available groups
-        if (_groups_per_row > _initdata->_ngroup) 
-            _groups_per_row = _initdata->_ngroup;
+        _group_width = 25;
+        _groups_per_row = 1;
+        return;
     }
     
-    // Adjust group width to use full screen width
-    if (_groups_per_row > 1)
-        _group_width = _max_cols / _groups_per_row;
+    int ngroups = 1;
+    if (_initdata) ngroups = _initdata->_ngroup;
+    else return; // Don't calculate layout without data
+    
+    // Calculate how many groups we can fit
+    _groups_per_row = _max_cols / 30;  // 30 chars per group for breathing room
+    
+    // DEBUG: Let's see what's happening with a temp debug message
+    // Write to title temporarily to see intermediate values
+    
+    // Don't exceed actual number of groups
+    if (_groups_per_row > ngroups) 
+        _groups_per_row = ngroups;
+        
+    // Force at least 2 columns if we have multiple groups and space  
+    if (ngroups > 1 && _max_cols >= 60 && _groups_per_row < 2)
+        _groups_per_row = 2;
+        
+    // Ensure at least 1
+    if (_groups_per_row < 1) 
+        _groups_per_row = 1;
+    
+    // Distribute available width among groups
+    _group_width = _max_cols / _groups_per_row;
 }
 
 
@@ -465,21 +523,15 @@ void Niface::draw_screen (void)
     clear ();
     refresh ();
     
-    // Always check current screen dimensions before drawing
-    int current_rows, current_cols;
-    getmaxyx (stdscr, current_rows, current_cols);
-    
-    // Update layout if dimensions changed
-    if (current_rows != _max_rows || current_cols != _max_cols)
+    // Validate dimensions
+    if (_max_rows < 3 || _max_cols < 20) 
     {
-        _max_rows = current_rows;
-        _max_cols = current_cols;
-        calculate_layout ();
-        
-        // Resize windows to match new dimensions
-        wresize (_main_win, _max_rows - 1, _max_cols);
-        wresize (_status_win, 1, _max_cols);
-        mvwin (_status_win, _max_rows - 1, 0);
+        // Terminal too small, show minimal message
+        clear ();
+        mvprintw (0, 0, "Terminal too small (%dx%d)", _max_cols, _max_rows);
+        mvprintw (1, 0, "Minimum: 20x3");
+        refresh ();
+        return;
     }
     
     werase (_main_win);
@@ -530,14 +582,15 @@ void Niface::draw_groups (void)
     int row = 1, col = 1;
     int group_start_row = 2;
     
-    // Title
-    mvwprintw (_main_win, 0, 1, "Aeolus NCurses Interface - %s", _initdata->_instrdir);
+    // Title with debug info
+    mvwprintw (_main_win, 0, 1, "Aeolus NCurses Interface - %s [%d groups, %d per row, width %d]", 
+               _initdata->_instrdir, _initdata->_ngroup, _groups_per_row, _group_width);
     
     // Draw each group
     for (int g = 0; g < _initdata->_ngroup; g++)
     {
-        // Calculate group position
-        int group_col = col + (g % _groups_per_row) * _group_width;
+        // Calculate group position  
+        int group_col = (g % _groups_per_row) * _group_width;
         int group_row = group_start_row + (g / _groups_per_row) * 15; // 15 lines per group max
         
         if (group_row >= _max_rows - 2) break; // Don't overflow screen
@@ -854,6 +907,9 @@ void Niface::handle_ifc_init (M_ifc_init *M)
 {
     if (_initdata) _initdata->recover ();
     _initdata = M;
+    
+    // Now that we have instrument data, recalculate layout
+    calculate_layout ();
     _need_redraw = true;
 }
 
@@ -965,7 +1021,7 @@ int Niface::get_stop_color (int group, int ifelm)
 void Niface::get_stop_position (int group, int ifelm, int *y, int *x)
 {
     int group_start_row = 2;
-    int group_col = 1 + (group % _groups_per_row) * _group_width;
+    int group_col = (group % _groups_per_row) * _group_width;
     int group_row = group_start_row + (group / _groups_per_row) * 15;
     
     *y = group_row + 1 + ifelm; // +1 for group header
