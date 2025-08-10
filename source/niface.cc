@@ -28,9 +28,27 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+#include <atomic>
 
 
 #include "niface.h"
+
+// Global atomic flag set by signal handler
+static std::atomic<bool> resize_flag{false};
+
+// Self-pipe for waking up select()
+static int wake_pipe[2] = {-1, -1};
+
+// SIGWINCH handler that sets flag and wakes up input thread
+static void sigwinch_handler(int sig) {
+    // Set flag for resize handling
+    resize_flag.store(true);
+    // Write to pipe to wake up select() in input thread
+    if (wake_pipe[1] != -1) {
+        char byte = 1;
+        write(wake_pipe[1], &byte, 1);
+    }
+}
 
 
 
@@ -60,14 +78,23 @@ void NInputHandler::thr_main (void)
     // This thread handles keyboard input using select() to avoid polling
     fd_set readfds;
     int stdin_fd = STDIN_FILENO;
+    int max_fd = stdin_fd;
+    
+    // Add wake pipe to monitoring if available
+    if (wake_pipe[0] != -1 && wake_pipe[0] > max_fd) {
+        max_fd = wake_pipe[0];
+    }
     
     while (!_niface->_stop)
     {
         FD_ZERO(&readfds);
         FD_SET(stdin_fd, &readfds);
+        if (wake_pipe[0] != -1) {
+            FD_SET(wake_pipe[0], &readfds);
+        }
         
-        // Block waiting for input on stdin
-        int result = select(stdin_fd + 1, &readfds, nullptr, nullptr, nullptr);
+        // Block waiting for input on stdin or wake pipe
+        int result = select(max_fd + 1, &readfds, nullptr, nullptr, nullptr);
         
         if (result < 0)
         {
@@ -75,10 +102,20 @@ void NInputHandler::thr_main (void)
             break;  // Error occurred
         }
         
-        if (result > 0 && FD_ISSET(stdin_fd, &readfds))
+        if (result > 0)
         {
-            // Input is available, signal the main thread
-            reply();  // Send EV_INPUT event to main thread
+            if (FD_ISSET(stdin_fd, &readfds))
+            {
+                // Input is available, signal the main thread
+                reply();  // Send EV_INPUT event to main thread
+            }
+            if (wake_pipe[0] != -1 && FD_ISSET(wake_pipe[0], &readfds))
+            {
+                // Wake pipe triggered, drain it and signal main thread
+                char buffer[256];
+                read(wake_pipe[0], buffer, sizeof(buffer));  // Drain the pipe
+                reply();  // Send EV_INPUT event to main thread
+            }
         }
     }
 }
@@ -163,6 +200,10 @@ Niface::Niface (int ac, char *av []) :
 
 Niface::~Niface (void)
 {
+    // Clean up wake pipe
+    if (wake_pipe[0] != -1) close(wake_pipe[0]);
+    if (wake_pipe[1] != -1) close(wake_pipe[1]);
+    
     cleanup_ncurses ();
     if (_itc_handler) delete _itc_handler;
     if (_input_handler) delete _input_handler;
@@ -179,6 +220,9 @@ void Niface::init_ncurses_only (void)
 {
     // Initialize ncurses
     initscr ();
+    
+    // Ensure ncurses can handle window resize events
+    // This should allow KEY_RESIZE generation when terminal is resized
     
     // Enable color if available
     if (has_colors ())
@@ -209,11 +253,16 @@ void Niface::init_ncurses_only (void)
     // Calculate initial layout
     calculate_layout ();
     
-    // Set up signal handler for clean shutdown
+    // Create wake pipe for signal handler
+    if (pipe(wake_pipe) != 0) {
+        // Fallback to timer-only if pipe creation fails
+        wake_pipe[0] = wake_pipe[1] = -1;
+    }
+    
+    // Set up signal handlers
     signal (SIGINT, SIG_IGN);
     signal (SIGTERM, SIG_IGN);
-    // Ignore SIGWINCH completely - use polling instead
-    signal (SIGWINCH, SIG_IGN);
+    signal (SIGWINCH, sigwinch_handler);
     
     // Show initial loading screen
     draw_initial_screen ();
@@ -235,17 +284,15 @@ void Niface::thr_main (void)
     // Start the input handler thread  
     _input_handler->thr_start (SCHED_OTHER, 0, 0);
     
-    // Set up timing for tuning blink (~4Hz like GUI)
-    set_time (0);
-    inc_time (250000); // 250ms = 4Hz blink rate
-    
-    struct timeval last_blink = {0, 0};
-    gettimeofday (&last_blink, nullptr);
-    
     while (! _stop)
     {
-        // Block waiting for events - input, messages, or timer
-        int event = get_event_timed ();
+        // Use timed events only when blinking is needed, otherwise block indefinitely
+        int event;
+        if (_has_tuning_stop) {
+            event = get_event_timed ();
+        } else {
+            event = get_event ();
+        }
         bool had_event = false;
         bool need_blink_update = false;
         
@@ -257,15 +304,8 @@ void Niface::thr_main (void)
                 int ch = getch ();
                 if (ch != ERR)
                 {
-                    if (ch == KEY_RESIZE)
-                    {
-                        // Ignore KEY_RESIZE - we handle resize via polling
-                    }
-                    else
-                    {
-                        handle_key (ch);
-                        had_event = true;
-                    }
+                    handle_key (ch);
+                    had_event = true;
                 }
             }
             break;
@@ -277,18 +317,15 @@ void Niface::thr_main (void)
             break;
             
         case EV_TIME:
-            // Timer event for tuning blink and resize detection
+            // Timer event for tuning blink
             if (_has_tuning_stop)
             {
                 _tuning_blink_state = !_tuning_blink_state;
                 need_blink_update = true;
+                // Continue timer for next blink
+                inc_time (250000);
             }
-            
-            // Check for terminal resize by polling
-            handle_resize_polling();
-            
-            // Reset timer for next check
-            inc_time (250000);
+            // If tuning stopped, we'll switch to get_event() on next iteration
             break;
             
             
@@ -299,6 +336,12 @@ void Niface::thr_main (void)
         default:
             // No event or other event, continue
             break;
+        }
+        
+        // Check for pending resize from signal handler
+        if (resize_flag.exchange(false)) {
+            handle_resize_from_signal();
+            had_event = true;
         }
         
         // Always check if screen needs redrawing (could be set by NITCHandler)
@@ -332,9 +375,10 @@ void Niface::handle_input_msg (void)
 
 
 
-void Niface::handle_resize_polling (void)
+void Niface::handle_resize_from_signal (void)
 {
-    // Get actual terminal size using ioctl
+    // Handle resize triggered by SIGWINCH signal
+    // Use ioctl to get actual terminal size (more reliable than getmaxyx after signal)
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
     {
@@ -953,6 +997,11 @@ void Niface::handle_ifc_elset (M_ifc_ifelm *M)
 void Niface::handle_ifc_elatt (M_ifc_ifelm *M)
 {
     // Handle element attachment (retuning) - this stop is being tuned
+    if (!_has_tuning_stop) {
+        // Starting tuning - set up timer for blinking
+        set_time (0);
+        inc_time (250000); // 250ms = 4Hz blink rate
+    }
     _has_tuning_stop = true;
     _tuning_group = M->_group;
     _tuning_ifelm = M->_ifelm;

@@ -87,7 +87,7 @@ private:
     void handle_input (void);
     void handle_input_msg (void);
     void handle_key (int ch);
-    void handle_resize_polling (void);
+    void handle_resize_from_signal (void);
     void draw_screen (void);
     void draw_initial_screen (void);
     void draw_status (void);
