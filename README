@@ -196,7 +196,7 @@ Command line options are:
 
 (output format)
 
-  -B     This options selects direct Ambisionics first order
+  -B     This options selects direct Ambisonics first order
          B-format output, to be used for recording or with
          an external decoder. The default is stereo output.
 
