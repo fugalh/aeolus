@@ -91,6 +91,15 @@ if(READLINE_LIB)
   target_link_libraries(aeolus PRIVATE ${READLINE_LIB})
 endif()
 
+# ncurses (optional, for ncurses TUI)
+find_package(Curses)
+if(CURSES_FOUND)
+  target_compile_definitions(aeolus PRIVATE HAVE_NIFACE)
+  target_sources(aeolus PRIVATE source/niface.cc)
+  target_include_directories(aeolus PRIVATE ${CURSES_INCLUDE_DIR})
+  target_link_libraries(aeolus PRIVATE ${CURSES_LIBRARIES})
+endif()
+
 # Optional unit tests
 pkg_check_modules(GMOCK gmock)
 option(BUILD_TESTS "Build unit tests" ${GMOCK_FOUND})
