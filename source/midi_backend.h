@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-//  Copyright (C) 2003-2013 Fons Adriaensen <fons@linuxaudio.org>
+//  Copyright (C) 2003-2022 Fons Adriaensen <fons@linuxaudio.org>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -18,58 +18,55 @@
 // ----------------------------------------------------------------------------
 
 
-#ifndef __IMIDI_H
-#define __IMIDI_H
+#ifndef __MIDI_BACKEND_H
+#define __MIDI_BACKEND_H
 
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <clthreads.h>
-#ifdef __linux__
-#include <alsa/asoundlib.h>
-#endif
-#ifdef __APPLE__
-#include <CoreMIDI/MIDIServices.h>
-#endif
 #include "lfqueue.h"
+#include "midi_processor.h"
 #include "messages.h"
 
 
-
-class Imidi : public A_thread
+class MidiBackend : public A_thread, public MidiProcessor::Handler
 {
 public:
 
-    Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appname);
-    virtual ~Imidi (void);
+    MidiBackend (const char *name, Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appname);
+    virtual ~MidiBackend (void);
 
-    void terminate (void);
-#ifdef __APPLE__
-    void coremidi_proc (const MIDIPacketList *pktlist, void *refCon, void *connRefCon);
-#endif
+    // Pure virtual interface - must be implemented by subclasses
+    virtual void terminate (void) = 0;
 
-private:
+    // MidiProcessor::Handler implementation (base class provides no-op)
+    void key_on(int note, int keyboard) override;
+    void key_off(int note, int keyboard) override;
+    void all_sound_off() override;
+    void all_notes_off(int keyboard) override;
+    void hold_pedal(int keyboard, bool on) override;
 
-    virtual void thr_main (void);
+protected:
 
-    void open_midi (void);
-    void close_midi (void);
-    void proc_midi (void);
+    // Pure virtual methods for platform-specific implementation
+    virtual void open_midi (void) = 0;
+    virtual void close_midi (void) = 0;
+    virtual void proc_midi (void) = 0;
+
+    // Common message processing
     void proc_mesg (ITC_mesg *M);
 
+    // Common member variables
     Lfq_u32        *_qnote;
     Lfq_u8         *_qmidi;
     uint16_t       *_midimap;
     const char     *_appname;
-#ifdef __linux__
-    snd_seq_t      *_handle;
-#endif
-#ifdef __APPLE__
-    MIDIClientRef   _handle;
-#endif
     int             _client;
     int             _ipport;
     int             _opport;
+
+private:
+
+    virtual void thr_main (void) override;
 };
 
 
