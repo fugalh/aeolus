@@ -33,6 +33,9 @@
 #if defined(STATIC_UI) && defined(HAVE_XIFACE)
 #include "xiface.h"
 #endif
+#if defined(STATIC_UI) && defined(HAVE_NIFACE)
+#include "niface.h"
+#endif
 #include "global.h"
 #include "audio_factory.h"
 #ifdef __linux__
@@ -45,13 +48,14 @@
 
 
 #ifdef __linux__
-static const char *options = "htuAJBM:N:S:I:W:d:r:p:n:s:";
+static const char *options = "htuAJBcM:N:S:I:W:d:r:p:n:s:";
 #else
-static const char *options = "htuJBM:N:S:I:W:s:";
+static const char *options = "htuJBcM:N:S:I:W:s:";
 #endif
 static char  optline [1024];
 static bool  t_opt = false;
 static bool  u_opt = false;
+static bool  c_opt = false;
 static bool  A_opt = false;
 static bool  B_opt = false;
 static int   r_val = 48000;
@@ -76,6 +80,7 @@ static void help (void)
     fprintf (stderr, "Options:\n");
     fprintf (stderr, "  -h                 Display this text\n");
     fprintf (stderr, "  -t                 Text mode user interface\n");
+    fprintf (stderr, "  -c                 NCurses mode user interface\n");
     fprintf (stderr, "  -u                 Use presets file in user's home dir\n");
     fprintf (stderr, "  -N <name>          Name to use as JACK and ALSA client [aeolus]\n");
     fprintf (stderr, "  -S <stops>         Name of stops directory [stops]\n");
@@ -114,6 +119,7 @@ static void procoptions (int ac, char *av [], const char *where)
         {
         case 'h' : help (); exit (0);
          case 't' : t_opt = true;  break;
+         case 'c' : c_opt = true;  break;
          case 'u' : u_opt = true;  break;
          case 'A' : A_opt = true;  break;
         case 'J' : A_opt = false; break;
@@ -209,6 +215,15 @@ int main (int ac, char *av [])
         iface = new Tiface (ac, av);
 #else
         fprintf (stderr, "Error: text interface not available in this build.\n");
+        return 1;
+#endif
+    }
+    else if (c_opt)
+    {
+#ifdef HAVE_NIFACE
+        iface = new Niface (ac, av);
+#else
+        fprintf (stderr, "Error: NCurses interface not available in this build.\n");
         return 1;
 #endif
     }

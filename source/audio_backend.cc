@@ -59,7 +59,7 @@ AudioBackend::AudioBackend (const char *appname, Lfq_u32 *qnote, Lfq_u32 *qcomm)
 AudioBackend::~AudioBackend (void)
 {
     for (int i = 0; i < _nasect; i++) delete _asectp [i];
-    for (int i = 0; i < 8; i++) delete[] _outbuf [i];
+    // Note: _outbuf cleanup is handled by derived classes since allocation varies
 }
 
 
