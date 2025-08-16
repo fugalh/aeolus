@@ -6,6 +6,7 @@ project(
 add_executable(aeolus)
 target_compile_definitions(aeolus PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 target_compile_options(aeolus PRIVATE -Wno-deprecated-declarations -Wno-constant-conversion)
+target_compile_features(aeolus PRIVATE cxx_std_20)
 
 target_sources(
   aeolus
@@ -88,6 +89,61 @@ if(READLINE_LIB)
   target_compile_definitions(aeolus PRIVATE HAVE_TIFACE)
   target_sources(aeolus PRIVATE source/tiface.cc)
   target_link_libraries(aeolus PRIVATE ${READLINE_LIB})
+endif()
+
+# Optional unit tests
+pkg_check_modules(GMOCK gmock)
+option(BUILD_TESTS "Build unit tests" ${GMOCK_FOUND})
+if(BUILD_TESTS AND GMOCK_FOUND)
+  enable_testing()
+  pkg_check_modules(GTEST_MAIN REQUIRED gtest_main)
+  
+  # Create test executable
+  add_executable(aeolus_test)
+  
+  # Add test sources (no need for test_main.cc with gtest_main)
+  target_sources(aeolus_test PRIVATE
+      tests/test_audio_backend.cc
+      tests/test_midi_processor.cc
+      tests/test_audio_processing.cc
+      tests/test_midi_integration.cc
+  )
+  
+  # Add Aeolus source files needed for testing (without main.cc)
+  target_sources(aeolus_test PRIVATE
+      source/audio_backend.cc
+      source/midi_processor.cc
+      source/midi_backend.cc
+      source/lfqueue.cc
+      source/asection.cc
+      source/division.cc
+      source/reverb.cc
+      source/addsynth.cc
+      source/scales.cc
+      source/rankwave.cc
+      source/rngen.cc
+      source/exp2ap.cc
+  )
+  
+  # Configure test target
+  target_include_directories(aeolus_test PRIVATE 
+      ${GMOCK_INCLUDE_DIRS}
+      source
+  )
+  
+  target_link_libraries(aeolus_test PRIVATE 
+      ${GMOCK_LDFLAGS}
+      ${GTEST_MAIN_LDFLAGS}
+      ${CLTHREADS_LIB} 
+      pthread
+  )
+  
+  target_compile_definitions(aeolus_test PRIVATE VERSION="test")
+  target_compile_options(aeolus_test PRIVATE -Wno-deprecated-declarations -Wno-constant-conversion)
+  target_compile_features(aeolus_test PRIVATE cxx_std_20)
+  
+  # Add test
+  add_test(NAME aeolus_unit_tests COMMAND aeolus_test)
 endif()
 
 install(TARGETS aeolus)
